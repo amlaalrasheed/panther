@@ -22,7 +22,7 @@ import {
 import { Combobox } from "@/components/ui/combobox";
 import { campaignSchema, campaignCreateSchema, type CampaignInput } from "@/lib/validation";
 import { createCampaign, updateCampaignDetails } from "@/app/(app)/campaigns/actions";
-import { PRIORITY_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
+import { PAYMENT_STATUS_LABELS } from "@/lib/constants";
 
 type CompanyOption = { id: string; name: string; nameAr: string | null; type: "AGENCY" | "DIRECT_COMPANY" };
 type ContactOption = { id: string; companyId: string; name: string };
@@ -164,10 +164,6 @@ export function CampaignForm({
             {errors.productName && <p className="text-xs text-destructive">{errors.productName.message}</p>}
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="packageName">Package Name</Label>
-            <Input id="packageName" {...register("packageName")} />
-          </div>
-          <div className="flex flex-col gap-2">
             <Label htmlFor="campaignTitle">Campaign Title</Label>
             <Input id="campaignTitle" {...register("campaignTitle")} />
             {errors.campaignTitle && (
@@ -199,24 +195,6 @@ export function CampaignForm({
                 {SNAP_OPTIONS.map((n) => (
                   <SelectItem key={n} value={String(n)}>
                     {n} Snap{n > 1 ? "s" : ""}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label>Priority</Label>
-            <Select
-              value={watch("priority")}
-              onValueChange={(v) => setValue("priority", v as CampaignInput["priority"])}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(PRIORITY_LABELS).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>
-                    {label}
                   </SelectItem>
                 ))}
               </SelectContent>

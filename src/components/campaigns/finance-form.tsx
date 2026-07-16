@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/select";
 import { financeUpdateSchema, type FinanceUpdateInput } from "@/lib/validation";
 import { updateCampaignFinance } from "@/app/(app)/campaigns/actions";
-import { PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
+import { PAYMENT_STATUS_LABELS } from "@/lib/constants";
 import { FileUploadField } from "@/components/campaigns/file-upload-field";
 
 export function FinanceForm({
@@ -71,24 +71,6 @@ export function FinanceForm({
           <Input id="f-invoiceNumber" {...register("invoiceNumber")} />
         </div>
         <div className="flex flex-col gap-2">
-          <Label>Payment Method</Label>
-          <Select
-            value={watch("paymentMethod") || undefined}
-            onValueChange={(v) => setValue("paymentMethod", v as FinanceUpdateInput["paymentMethod"])}
-          >
-            <SelectTrigger>
-              <SelectValue placeholder="Select..." />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(PAYMENT_METHOD_LABELS).map(([value, label]) => (
-                <SelectItem key={value} value={value}>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div className="flex flex-col gap-2">
           <Label>Payment Status</Label>
           <Select
             value={watch("paymentStatus")}
@@ -113,14 +95,6 @@ export function FinanceForm({
         <div className="flex flex-col gap-2">
           <Label htmlFor="f-depositDate">Deposit Date</Label>
           <Input id="f-depositDate" type="date" {...register("depositDate")} />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="f-expectedDepositDate">Expected Deposit Date</Label>
-          <Input id="f-expectedDepositDate" type="date" {...register("expectedDepositDate")} />
-        </div>
-        <div className="flex flex-col gap-2 sm:col-span-3">
-          <Label htmlFor="f-transactionRef">Transaction Reference</Label>
-          <Input id="f-transactionRef" {...register("transactionRef")} />
         </div>
         <div className="flex flex-col gap-2">
           <FileUploadField
