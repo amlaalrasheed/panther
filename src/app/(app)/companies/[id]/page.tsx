@@ -66,6 +66,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
               city: company.city ?? "",
               industry: company.industry ?? "",
               notes: company.notes ?? "",
+              trustedCustomer: company.trustedCustomer,
             }}
             trigger={
               <Button variant="outline">

@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
@@ -23,7 +22,7 @@ import {
 import { Combobox } from "@/components/ui/combobox";
 import { campaignSchema, type CampaignInput } from "@/lib/validation";
 import { createCampaign, updateCampaignDetails } from "@/app/(app)/campaigns/actions";
-import { CUSTOMER_TYPE_LABELS, PRIORITY_LABELS, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
+import { PRIORITY_LABELS, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
 
 type CompanyOption = { id: string; name: string; nameAr: string | null; type: "AGENCY" | "DIRECT_COMPANY" };
 type ContactOption = { id: string; companyId: string; name: string };
@@ -58,7 +57,6 @@ export function CampaignForm({
     defaultValues: {
       companyId: "",
       contactId: "",
-      customerType: "DIRECT_COMPANY",
       productName: "",
       campaignTitle: "",
       campaignTitleAr: "",
@@ -70,7 +68,6 @@ export function CampaignForm({
       postingTime: "",
       priority: "NORMAL",
       assignedUserId: "",
-      trustedCustomer: false,
       price: 0,
       discount: 0,
       vat: 0,
@@ -120,22 +117,24 @@ export function CampaignForm({
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-2">
-            <Label>Company</Label>
+            <Label>
+              Company <span className="text-destructive">*</span>
+            </Label>
             <Combobox
               options={companyOptions}
               value={companyId}
               onChange={(v) => {
                 setValue("companyId", v);
                 setValue("contactId", "");
-                const company = companies.find((c) => c.id === v);
-                if (company) setValue("customerType", company.type);
               }}
               placeholder="Select company..."
             />
             {errors.companyId && <p className="text-xs text-destructive">{errors.companyId.message}</p>}
           </div>
           <div className="flex flex-col gap-2">
-            <Label>Contact Person</Label>
+            <Label>
+              Contact Person <span className="text-destructive">*</span>
+            </Label>
             <Select value={watch("contactId") || undefined} onValueChange={(v) => setValue("contactId", v ?? "")}>
               <SelectTrigger>
                 <SelectValue placeholder="Select contact..." />
@@ -151,34 +150,7 @@ export function CampaignForm({
                 )}
               </SelectContent>
             </Select>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label>Customer Type</Label>
-            <Select
-              value={watch("customerType")}
-              onValueChange={(v) => setValue("customerType", v as CampaignInput["customerType"])}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(CUSTOMER_TYPE_LABELS).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center gap-3 pt-6">
-            <Switch
-              checked={watch("trustedCustomer")}
-              onCheckedChange={(v) => setValue("trustedCustomer", v)}
-              id="trustedCustomer"
-            />
-            <Label htmlFor="trustedCustomer" className="font-normal">
-              Trusted customer — allow campaign before payment
-            </Label>
+            {errors.contactId && <p className="text-xs text-destructive">{errors.contactId.message}</p>}
           </div>
         </CardContent>
       </Card>

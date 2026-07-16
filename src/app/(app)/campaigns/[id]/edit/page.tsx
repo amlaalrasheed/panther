@@ -43,7 +43,6 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
           defaultValues={{
             companyId: campaign.companyId,
             contactId: campaign.contactId ?? "",
-            customerType: campaign.customerType,
             productName: campaign.productName,
             campaignTitle: campaign.campaignTitle,
             campaignTitleAr: campaign.campaignTitleAr ?? "",
@@ -55,7 +54,6 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
             postingTime: campaign.postingTime ?? "",
             priority: campaign.priority,
             assignedUserId: campaign.assignedUserId ?? "",
-            trustedCustomer: campaign.trustedCustomer,
             price: Number(campaign.finance?.price ?? 0),
             discount: Number(campaign.finance?.discount ?? 0),
             vat: Number(campaign.finance?.vat ?? 0),

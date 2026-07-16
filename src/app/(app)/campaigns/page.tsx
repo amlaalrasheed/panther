@@ -40,8 +40,8 @@ export default async function CampaignsPage({
   const where: Prisma.CampaignWhereInput = {
     deletedAt: null,
     ...(user.role === "MARKETING" ? { assignedUserId: user.id } : {}),
-    ...(trusted === "yes" ? { trustedCustomer: true } : {}),
-    ...(trusted === "no" ? { trustedCustomer: false } : {}),
+    ...(trusted === "yes" ? { company: { trustedCustomer: true } } : {}),
+    ...(trusted === "no" ? { company: { trustedCustomer: false } } : {}),
     ...(q
       ? {
           OR: [

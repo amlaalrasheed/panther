@@ -7,6 +7,7 @@ export const companySchema = z.object({
   city: z.string().optional().or(z.literal("")),
   industry: z.string().min(1, "Industry is required"),
   notes: z.string().optional().or(z.literal("")),
+  trustedCustomer: z.boolean(),
 });
 
 export const contactSchema = z.object({
@@ -25,8 +26,7 @@ export type ContactInput = z.infer<typeof contactSchema>;
 
 export const campaignSchema = z.object({
   companyId: z.string().min(1, "Company is required"),
-  contactId: z.string().optional().or(z.literal("")),
-  customerType: z.enum(["AGENCY", "DIRECT_COMPANY"]),
+  contactId: z.string().min(1, "Contact is required"),
   productName: z.string().min(1, "Product name is required"),
   campaignTitle: z.string().min(1, "Campaign title is required"),
   campaignTitleAr: z.string().optional().or(z.literal("")),
@@ -38,7 +38,6 @@ export const campaignSchema = z.object({
   postingTime: z.string().optional().or(z.literal("")),
   priority: z.enum(["URGENT", "NORMAL", "SCHEDULED"]),
   assignedUserId: z.string().optional().or(z.literal("")),
-  trustedCustomer: z.boolean().optional(),
 
   // Financial (Admin / Finance only — enforced server-side)
   price: z.coerce.number().min(0).optional(),

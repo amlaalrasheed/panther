@@ -94,9 +94,9 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
               <Field label="Priority" value={PRIORITY_LABELS[campaign.priority]} />
               <Field label="Ad Date" value={formatDate(campaign.adDate)} />
               <Field label="Posting Time" value={campaign.postingTime ?? "—"} />
-              <Field label="Customer Type" value={CUSTOMER_TYPE_LABELS[campaign.customerType]} />
+              <Field label="Customer Type" value={CUSTOMER_TYPE_LABELS[campaign.company.type]} />
               <Field label="Contact" value={campaign.contact?.name ?? "—"} />
-              <Field label="Trusted Customer" value={campaign.trustedCustomer ? "Yes" : "No"} />
+              <Field label="Trusted Customer" value={campaign.company.trustedCustomer ? "Yes" : "No"} />
               {campaign.description && (
                 <div className="col-span-full">
                   <p className="text-xs font-medium text-muted-foreground">Description</p>

@@ -28,7 +28,6 @@ export async function createCampaign(input: CampaignInput) {
       campaignCode,
       companyId: data.companyId,
       contactId: data.contactId || null,
-      customerType: data.customerType,
       productName: data.productName,
       campaignTitle: data.campaignTitle,
       campaignTitleAr: data.campaignTitleAr || null,
@@ -40,7 +39,6 @@ export async function createCampaign(input: CampaignInput) {
       postingTime: data.postingTime || null,
       priority: data.priority,
       assignedUserId: data.assignedUserId || null,
-      trustedCustomer: data.trustedCustomer ?? false,
       createdById: user.id,
       status: "INQUIRY_RECEIVED",
       finance: {
@@ -91,7 +89,6 @@ export async function updateCampaignDetails(id: string, input: CampaignInput) {
     data: {
       companyId: data.companyId,
       contactId: data.contactId || null,
-      customerType: data.customerType,
       productName: data.productName,
       campaignTitle: data.campaignTitle,
       campaignTitleAr: data.campaignTitleAr || null,
@@ -103,7 +100,6 @@ export async function updateCampaignDetails(id: string, input: CampaignInput) {
       postingTime: data.postingTime || null,
       priority: data.priority,
       assignedUserId: data.assignedUserId || null,
-      trustedCustomer: data.trustedCustomer ?? false,
     },
   });
 
@@ -148,7 +144,7 @@ export async function changeCampaignStatus(id: string, toStatus: CampaignStatus,
   const user = await requireUser();
   const campaign = await prisma.campaign.findUniqueOrThrow({
     where: { id },
-    include: { finance: true },
+    include: { finance: true, company: { select: { trustedCustomer: true } } },
   });
 
   if (user.role === "MARKETING") {
@@ -167,7 +163,7 @@ export async function changeCampaignStatus(id: string, toStatus: CampaignStatus,
   const paymentGateIndex = STATUS_ORDER.indexOf("PAYMENT_RECEIVED");
   if (
     targetIndex >= paymentGateIndex &&
-    !campaign.trustedCustomer &&
+    !campaign.company.trustedCustomer &&
     campaign.finance?.paymentStatus !== "PAID"
   ) {
     throw new Error(

@@ -1,8 +1,11 @@
+import Link from "next/link";
 import { requireRole } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MonthlyBarChart } from "@/components/dashboard/monthly-bar-chart";
 import { getMonthlyRevenue, getMonthlyCampaignCounts } from "@/lib/dashboard-queries";
+import { cn } from "@/lib/utils";
+import { subDays, subMonths, startOfMonth } from "date-fns";
 import {
   Table,
   TableBody,
@@ -12,19 +15,41 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-export default async function AnalyticsPage() {
+const PERIODS = {
+  "12m": { label: "Last 12 Months", chartMonths: 12 },
+  month: { label: "This Month", chartMonths: 1 },
+  "90d": { label: "Last 90 Days", chartMonths: 3 },
+} as const;
+
+type Period = keyof typeof PERIODS;
+
+function windowStartFor(period: Period) {
+  const now = new Date();
+  if (period === "month") return startOfMonth(now);
+  if (period === "90d") return subDays(now, 90);
+  return startOfMonth(subMonths(now, 11));
+}
+
+export default async function AnalyticsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ period?: string }>;
+}) {
   await requireRole(["ADMIN", "FINANCE"]);
+  const { period: periodParam } = await searchParams;
+  const period: Period = periodParam && periodParam in PERIODS ? (periodParam as Period) : "12m";
+  const windowStart = windowStartFor(period);
 
   const [revenueData, campaignCounts, campaigns, marketingUsers] = await Promise.all([
-    getMonthlyRevenue(12),
-    getMonthlyCampaignCounts(12),
+    getMonthlyRevenue(PERIODS[period].chartMonths),
+    getMonthlyCampaignCounts(PERIODS[period].chartMonths),
     prisma.campaign.findMany({
-      where: { deletedAt: null },
+      where: { deletedAt: null, createdAt: { gte: windowStart } },
       select: {
-        customerType: true,
         numberOfSnaps: true,
         assignedUserId: true,
         status: true,
+        company: { select: { type: true } },
         finance: { select: { finalAmount: true } },
       },
     }),
@@ -38,10 +63,10 @@ export default async function AnalyticsPage() {
 
   const revenueByType = {
     AGENCY: campaigns
-      .filter((c) => c.customerType === "AGENCY")
+      .filter((c) => c.company.type === "AGENCY")
       .reduce((s, c) => s + Number(c.finance?.finalAmount ?? 0), 0),
     DIRECT_COMPANY: campaigns
-      .filter((c) => c.customerType === "DIRECT_COMPANY")
+      .filter((c) => c.company.type === "DIRECT_COMPANY")
       .reduce((s, c) => s + Number(c.finance?.finalAmount ?? 0), 0),
   };
 
@@ -64,9 +89,27 @@ export default async function AnalyticsPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
-        <p className="text-sm text-muted-foreground">Business performance across the last 12 months</p>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
+          <p className="text-sm text-muted-foreground">Business performance — {PERIODS[period].label.toLowerCase()}</p>
+        </div>
+        <div className="flex gap-1 rounded-lg border p-1">
+          {(Object.keys(PERIODS) as Period[]).map((key) => (
+            <Link
+              key={key}
+              href={`/analytics?period=${key}`}
+              className={cn(
+                "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
+                key === period
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted"
+              )}
+            >
+              {PERIODS[key].label}
+            </Link>
+          ))}
+        </div>
       </div>
 
       <div className="max-w-xs">

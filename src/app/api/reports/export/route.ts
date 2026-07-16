@@ -67,7 +67,7 @@ export async function GET(request: NextRequest) {
   const rows = campaigns.map((c) => [
     c.campaignCode,
     c.company.name,
-    CUSTOMER_TYPE_LABELS[c.customerType],
+    CUSTOMER_TYPE_LABELS[c.company.type],
     c.contact?.name ?? "",
     c.campaignTitle,
     c.productName,

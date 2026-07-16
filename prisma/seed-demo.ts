@@ -15,11 +15,11 @@ async function main() {
   const company =
     (await prisma.company.findFirst({ where: { name: "Al Faisaliah Retail Group" } })) ??
     (await prisma.company.create({
-      data: { name: "Al Faisaliah Retail Group", nameAr: "مجموعة الفيصلية للتجزئة", type: "DIRECT_COMPANY", city: "Riyadh", industry: "Retail" },
+      data: { name: "Al Faisaliah Retail Group", nameAr: "مجموعة الفيصلية للتجزئة", type: "DIRECT_COMPANY", city: "Riyadh", industry: "Retail", trustedCustomer: true },
     }));
 
   const agency = await prisma.company.create({
-    data: { name: "Nova Media Agency", nameAr: "وكالة نوفا الإعلامية", type: "AGENCY", city: "Jeddah", industry: "Marketing" },
+    data: { name: "Nova Media Agency", nameAr: "وكالة نوفا الإعلامية", type: "AGENCY", city: "Jeddah", industry: "Marketing", trustedCustomer: false },
   });
 
   const contact = await prisma.contact.create({
@@ -39,7 +39,6 @@ async function main() {
         campaignCode: `CMP-${now.getFullYear()}-DEMO${i}`,
         companyId: i % 2 === 0 ? company.id : agency.id,
         contactId: i % 2 === 0 ? contact.id : null,
-        customerType: i % 2 === 0 ? "DIRECT_COMPANY" : "AGENCY",
         productName: `Product Launch ${i + 1}`,
         campaignTitle: `Ramadan Promo Snap #${i + 1}`,
         numberOfSnaps: (i % 7) + 1,
@@ -49,7 +48,6 @@ async function main() {
         priority: i % 3 === 0 ? "URGENT" : "NORMAL",
         assignedUserId: marketing.id,
         status,
-        trustedCustomer: i % 2 === 0,
         createdById: admin.id,
         finance: {
           create: {

@@ -18,6 +18,7 @@ export async function createCompany(input: CompanyInput) {
       city: data.city || null,
       industry: data.industry || null,
       notes: data.notes || null,
+      trustedCustomer: data.trustedCustomer ?? false,
     },
   });
 
@@ -47,6 +48,7 @@ export async function updateCompany(id: string, input: CompanyInput) {
       city: data.city || null,
       industry: data.industry || null,
       notes: data.notes || null,
+      trustedCustomer: data.trustedCustomer ?? false,
     },
   });
 

@@ -18,6 +18,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -49,7 +50,16 @@ export function CompanyFormDialog({
     formState: { errors, isSubmitting },
   } = useForm<CompanyInput>({
     resolver: zodResolver(companySchema),
-    defaultValues: company ?? { name: "", nameAr: "", type: "DIRECT_COMPANY", city: "", industry: "", notes: "" },
+    defaultValues:
+      company ?? {
+        name: "",
+        nameAr: "",
+        type: "DIRECT_COMPANY",
+        city: "",
+        industry: "",
+        notes: "",
+        trustedCustomer: false,
+      },
   });
 
   async function onSubmit(data: CompanyInput) {
@@ -106,7 +116,9 @@ export function CompanyFormDialog({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label>Customer Type</Label>
+            <Label>
+              Customer Type <span className="text-destructive">*</span>
+            </Label>
             <Select
               value={watch("type")}
               onValueChange={(v) => setValue("type", v as CompanyInput["type"])}
@@ -132,6 +144,17 @@ export function CompanyFormDialog({
           <div className="flex flex-col gap-2">
             <Label htmlFor="notes">Notes</Label>
             <Textarea id="notes" rows={3} {...register("notes")} />
+          </div>
+
+          <div className="flex items-center gap-3">
+            <Switch
+              checked={watch("trustedCustomer")}
+              onCheckedChange={(v) => setValue("trustedCustomer", v)}
+              id="trustedCustomer"
+            />
+            <Label htmlFor="trustedCustomer" className="font-normal">
+              Trusted customer — allow campaigns before payment <span className="text-destructive">*</span>
+            </Label>
           </div>
 
           <DialogFooter>

@@ -115,16 +115,20 @@ model User {
 // ---------------------------------------------------------------------------
 
 model Company {
-  id           String       @id @default(cuid())
-  name         String
-  nameAr       String?
-  type         CustomerType @default(DIRECT_COMPANY)
-  city         String?
-  industry     String?
-  notes        String?
-  deletedAt    DateTime?
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  id              String       @id @default(cuid())
+  name            String
+  nameAr          String?
+  type            CustomerType @default(DIRECT_COMPANY)
+  city            String?
+  industry        String?
+  notes           String?
+  // Trusted customers may have campaigns proceed before payment is
+  // confirmed — set once at the company level, applies to every campaign
+  // booked for them.
+  trustedCustomer Boolean      @default(false)
+  deletedAt       DateTime?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
   contacts  Contact[]
   campaigns Campaign[]
@@ -164,7 +168,6 @@ model Campaign {
 
   companyId      String
   contactId      String?
-  customerType   CustomerType
 
   productName      String
   campaignTitle    String
@@ -181,8 +184,6 @@ model Campaign {
 
   assignedUserId String?
   status         CampaignStatus @default(INQUIRY_RECEIVED)
-
-  trustedCustomer Boolean @default(false)
 
   createdById String
   deletedAt   DateTime?
