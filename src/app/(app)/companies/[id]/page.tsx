@@ -39,11 +39,6 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
     (sum, c) => sum + Number(c.finance?.remainingBalance ?? 0),
     0
   );
-  const withFinance = company.campaigns.filter((c) => c.finance);
-  const paidCount = withFinance.filter((c) => c.finance?.paymentStatus === "PAID").length;
-  const reliabilityScore = withFinance.length
-    ? Math.round((paidCount / withFinance.length) * 100)
-    : null;
 
   return (
     <div className="flex flex-col gap-6">
@@ -58,9 +53,7 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
               {company.nameAr}
             </p>
           )}
-          <p className="text-sm text-muted-foreground">
-            {[company.city, company.industry].filter(Boolean).join(" · ") || "No location/industry set"}
-          </p>
+          {company.industry && <p className="text-sm text-muted-foreground">{company.industry}</p>}
         </div>
         <div className="flex gap-2">
           <CompanyFormDialog
@@ -85,17 +78,13 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
         <StatCard label="Campaigns" value={String(company.campaigns.length)} />
         <StatCard label="Lifetime Revenue" value={formatCurrency(lifetimeRevenue)} />
         <StatCard
           label="Outstanding Balance"
           value={formatCurrency(outstanding)}
           highlight={outstanding > 0}
-        />
-        <StatCard
-          label="Payment Reliability"
-          value={reliabilityScore === null ? "—" : `${reliabilityScore}%`}
         />
       </div>
 
