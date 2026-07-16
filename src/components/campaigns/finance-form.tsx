@@ -10,16 +10,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { financeUpdateSchema, type FinanceUpdateInput } from "@/lib/validation";
 import { updateCampaignFinance } from "@/app/(app)/campaigns/actions";
-import { PAYMENT_STATUS_LABELS } from "@/lib/constants";
 import { FileUploadField } from "@/components/campaigns/file-upload-field";
 
 export function FinanceForm({
@@ -69,24 +61,6 @@ export function FinanceForm({
         <div className="flex flex-col gap-2">
           <Label htmlFor="f-invoiceNumber">Invoice Number</Label>
           <Input id="f-invoiceNumber" {...register("invoiceNumber")} />
-        </div>
-        <div className="flex flex-col gap-2">
-          <Label>Payment Status</Label>
-          <Select
-            value={watch("paymentStatus")}
-            onValueChange={(v) => setValue("paymentStatus", v as FinanceUpdateInput["paymentStatus"])}
-          >
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {Object.entries(PAYMENT_STATUS_LABELS).map(([value, label]) => (
-                <SelectItem key={value} value={value}>
-                  {label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="f-amountPaid">Amount Paid</Label>

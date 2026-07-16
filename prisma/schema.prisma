@@ -181,6 +181,9 @@ model Campaign {
   adDate       DateTime?
   postingTime  String?
   priority     Priority  @default(NORMAL)
+  // Declared at booking time (e.g. logging a campaign after it already
+  // ran) — separate from the step-by-step status pipeline below.
+  posted       Boolean   @default(false)
 
   assignedUserId String?
   status         CampaignStatus @default(INQUIRY_RECEIVED)

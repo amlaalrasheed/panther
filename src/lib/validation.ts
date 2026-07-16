@@ -38,6 +38,7 @@ export const campaignSchema = z.object({
   postingTime: z.string().min(1, "Posting time is required"),
   priority: z.enum(["URGENT", "NORMAL", "SCHEDULED"]),
   assignedUserId: z.string().optional().or(z.literal("")),
+  posted: z.boolean().optional(),
 
   // Financial (Admin / Finance only — enforced server-side).
   // Optional here since the edit-mode form never renders these fields;
@@ -54,8 +55,10 @@ export const campaignSchema = z.object({
 export type CampaignInput = z.infer<typeof campaignSchema>;
 
 // Stricter variant used only when creating a new booking — the financial
-// fields are required up front instead of being filled in later.
+// fields (and posted status) are required up front instead of being
+// filled in later.
 export const campaignCreateSchema = campaignSchema.extend({
+  posted: z.boolean(),
   price: z.coerce.number().min(0),
   discount: z.coerce.number().min(0),
   vat: z.coerce.number().min(0),

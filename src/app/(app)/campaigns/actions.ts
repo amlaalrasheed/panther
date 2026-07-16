@@ -40,6 +40,7 @@ export async function createCampaign(input: CampaignInput) {
       postingTime: data.postingTime || null,
       priority: data.priority,
       assignedUserId: data.assignedUserId || null,
+      posted: data.posted,
       createdById: user.id,
       status: "INQUIRY_RECEIVED",
       finance: {

@@ -68,6 +68,7 @@ export function CampaignForm({
       postingTime: "",
       priority: "NORMAL",
       assignedUserId: "",
+      posted: false,
       price: 0,
       discount: 0,
       vat: 0,
@@ -232,6 +233,25 @@ export function CampaignForm({
               </SelectContent>
             </Select>
           </div>
+          {mode === "create" && (
+            <div className="flex flex-col gap-2">
+              <Label>
+                Posting Status <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={watch("posted") ? "posted" : "not_posted"}
+                onValueChange={(v) => setValue("posted", v === "posted")}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="not_posted">Not Posted</SelectItem>
+                  <SelectItem value="posted">Posted</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          )}
         </CardContent>
       </Card>
 

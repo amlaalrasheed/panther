@@ -92,6 +92,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
               <Field label="Snaps" value={String(campaign.numberOfSnaps)} />
               <Field label="Ad Date" value={formatDate(campaign.adDate)} />
               <Field label="Posting Time" value={campaign.postingTime ?? "—"} />
+              <Field label="Posting Status" value={campaign.posted ? "Posted" : "Not Posted"} />
               <Field label="Customer Type" value={CUSTOMER_TYPE_LABELS[campaign.company.type]} />
               <Field label="Contact" value={campaign.contact?.name ?? "—"} />
               <Field label="Trusted Customer" value={campaign.company.trustedCustomer ? "Yes" : "No"} />
