@@ -23,7 +23,7 @@ const ALL_NAV: (NavItem & { roles: AppRole[] })[] = [
   { label: "Campaigns", href: "/campaigns", icon: Megaphone, roles: ["ADMIN", "FINANCE", "MARKETING"] },
   { label: "Companies", href: "/companies", icon: Building2, roles: ["ADMIN", "FINANCE"] },
   { label: "Calendar", href: "/calendar", icon: CalendarDays, roles: ["ADMIN", "FINANCE", "MARKETING"] },
-  { label: "Analytics", href: "/analytics", icon: BarChart3, roles: ["ADMIN", "FINANCE"] },
+  { label: "Analytics", href: "/analytics", icon: BarChart3, roles: ["ADMIN", "FINANCE", "MARKETING"] },
   { label: "Reports", href: "/reports", icon: FileSpreadsheet, roles: ["ADMIN", "FINANCE"] },
   { label: "Users", href: "/users", icon: Users, roles: ["ADMIN"] },
   { label: "Audit Log", href: "/audit-log", icon: ScrollText, roles: ["ADMIN"] },

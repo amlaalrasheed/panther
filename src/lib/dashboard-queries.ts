@@ -76,6 +76,24 @@ export async function getMonthlyCampaignCounts(months = 6) {
   });
 }
 
+export async function getMonthlyAssignedCampaignCounts(userId: string, months = 6) {
+  const now = new Date();
+  const windowStart = startOfMonth(subMonths(now, months - 1));
+
+  const rows = await prisma.$queryRaw<{ month: Date; count: number }[]>`
+    SELECT date_trunc('month', "createdAt") AS month, COUNT(*)::int AS count
+    FROM "Campaign"
+    WHERE "deletedAt" IS NULL AND "createdAt" >= ${windowStart} AND "assignedUserId" = ${userId}
+    GROUP BY 1
+  `;
+  const byMonth = new Map(rows.map((r) => [format(r.month, "yyyy-MM"), Number(r.count)]));
+
+  return Array.from({ length: months }, (_, i) => {
+    const monthDate = subMonths(now, months - 1 - i);
+    return { label: format(monthDate, "MMM"), value: byMonth.get(format(monthDate, "yyyy-MM")) ?? 0 };
+  });
+}
+
 export async function getTopCustomers(type: "AGENCY" | "DIRECT_COMPANY" | undefined, limit = 10) {
   // select (not include) so only the one numeric field needed for the sum
   // crosses the wire per campaign, instead of every column on both models.
