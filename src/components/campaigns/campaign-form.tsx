@@ -61,7 +61,6 @@ export function CampaignForm({
       campaignTitle: "",
       campaignTitleAr: "",
       description: "",
-      brief: "",
       numberOfSnaps: 1,
       packageName: "",
       adDate: "",
@@ -182,10 +181,6 @@ export function CampaignForm({
           <div className="flex flex-col gap-2 sm:col-span-2">
             <Label htmlFor="description">Campaign Description</Label>
             <Textarea id="description" rows={2} {...register("description")} />
-          </div>
-          <div className="flex flex-col gap-2 sm:col-span-2">
-            <Label htmlFor="brief">Campaign Brief</Label>
-            <Textarea id="brief" rows={3} {...register("brief")} />
           </div>
           <div className="flex flex-col gap-2">
             <Label>Number of Snaps</Label>

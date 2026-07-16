@@ -102,12 +102,6 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
                   <p>{campaign.description}</p>
                 </div>
               )}
-              {campaign.brief && (
-                <div className="col-span-full">
-                  <p className="text-xs font-medium text-muted-foreground">Campaign Brief</p>
-                  <p className="whitespace-pre-wrap">{campaign.brief}</p>
-                </div>
-              )}
             </CardContent>
           </Card>
 
