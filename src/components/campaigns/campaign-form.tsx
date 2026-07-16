@@ -223,12 +223,18 @@ export function CampaignForm({
             </Select>
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="adDate">Advertisement Date</Label>
+            <Label htmlFor="adDate">
+              Advertisement Date <span className="text-destructive">*</span>
+            </Label>
             <Input id="adDate" type="date" {...register("adDate")} />
+            {errors.adDate && <p className="text-xs text-destructive">{errors.adDate.message}</p>}
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="postingTime">Posting Time</Label>
+            <Label htmlFor="postingTime">
+              Posting Time <span className="text-destructive">*</span>
+            </Label>
             <Input id="postingTime" type="time" {...register("postingTime")} />
+            {errors.postingTime && <p className="text-xs text-destructive">{errors.postingTime.message}</p>}
           </div>
           <div className="flex flex-col gap-2 sm:col-span-2">
             <Label>Assigned Marketing Member</Label>
