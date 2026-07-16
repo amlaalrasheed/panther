@@ -32,7 +32,7 @@ export function CaptureDialog({ campaignId }: { campaignId: string }) {
     watch,
     setValue,
     reset,
-    formState: { isSubmitting },
+    formState: { errors, isSubmitting },
   } = useForm<z.input<typeof captureSchema>, unknown, CaptureInput>({
     resolver: zodResolver(captureSchema),
     defaultValues: { numberOfCaptures: 0, engagement: "", comments: "", screenshotUrl: "" },
@@ -67,12 +67,20 @@ export function CaptureDialog({ campaignId }: { campaignId: string }) {
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="numberOfCaptures">Number of Captures</Label>
+              <Label htmlFor="numberOfCaptures">
+                Number of Captures <span className="text-destructive">*</span>
+              </Label>
               <Input id="numberOfCaptures" type="number" {...register("numberOfCaptures")} />
+              {errors.numberOfCaptures && (
+                <p className="text-xs text-destructive">{errors.numberOfCaptures.message}</p>
+              )}
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="engagement">Engagement</Label>
+              <Label htmlFor="engagement">
+                Engagement <span className="text-destructive">*</span>
+              </Label>
               <Input id="engagement" placeholder="e.g. 1.2k views" {...register("engagement")} />
+              {errors.engagement && <p className="text-xs text-destructive">{errors.engagement.message}</p>}
             </div>
           </div>
           <div className="flex flex-col gap-2">

@@ -95,8 +95,8 @@ export const feedbackSchema = z.object({
 export type FeedbackInput = z.infer<typeof feedbackSchema>;
 
 export const captureSchema = z.object({
-  numberOfCaptures: z.coerce.number().int().min(0).optional(),
-  engagement: z.string().optional().or(z.literal("")),
+  numberOfCaptures: z.coerce.number().int().min(0),
+  engagement: z.string().min(1, "Engagement is required"),
   comments: z.string().optional().or(z.literal("")),
   screenshotUrl: z.string().optional().or(z.literal("")),
 });
