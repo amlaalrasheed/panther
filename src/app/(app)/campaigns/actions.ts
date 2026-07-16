@@ -10,9 +10,11 @@ import {
   campaignSchema,
   financeUpdateSchema,
   feedbackSchema,
+  captureSchema,
   type CampaignInput,
   type FinanceUpdateInput,
   type FeedbackInput,
+  type CaptureInput,
 } from "@/lib/validation";
 import { STATUS_ORDER, type CampaignStatus } from "@/lib/constants";
 
@@ -327,6 +329,41 @@ export async function updateCampaignFinance(id: string, input: FinanceUpdateInpu
 
   revalidatePath(`/campaigns/${id}`);
   revalidatePath("/campaigns");
+}
+
+export async function addCapture(campaignId: string, input: CaptureInput) {
+  const user = await requireUser();
+  const campaign = await prisma.campaign.findUniqueOrThrow({ where: { id: campaignId } });
+
+  // 24-hour capture numbers can only be entered by the marketing team
+  // member the campaign is assigned to — not Admin, Finance, or any other
+  // marketing member.
+  if (user.role !== "MARKETING" || campaign.assignedUserId !== user.id) {
+    throw new Error("Only the marketing member assigned to this campaign can add capture results.");
+  }
+
+  const data = captureSchema.parse(input);
+  const capture = await prisma.capture.create({
+    data: {
+      campaignId,
+      numberOfCaptures: data.numberOfCaptures,
+      engagement: data.engagement || null,
+      comments: data.comments || null,
+      screenshotUrl: data.screenshotUrl || null,
+      completionTime: new Date(),
+      createdById: user.id,
+    },
+  });
+
+  await writeAuditLog({
+    userId: user.id,
+    action: "CREATE",
+    entityType: "Capture",
+    entityId: capture.id,
+    newValue: capture,
+  });
+
+  revalidatePath(`/campaigns/${campaignId}`);
 }
 
 export async function addComment(campaignId: string, body: string) {

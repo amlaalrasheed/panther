@@ -90,13 +90,18 @@ export function CompanyFormDialog({
         <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col gap-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <Label htmlFor="name">Company Name</Label>
+              <Label htmlFor="name">
+                Company Name <span className="text-destructive">*</span>
+              </Label>
               <Input id="name" {...register("name")} />
               {errors.name && <p className="text-xs text-destructive">{errors.name.message}</p>}
             </div>
             <div className="flex flex-col gap-2">
-              <Label htmlFor="nameAr">Company Name (Arabic)</Label>
+              <Label htmlFor="nameAr">
+                Company Name (Arabic) <span className="text-destructive">*</span>
+              </Label>
               <Input id="nameAr" dir="rtl" {...register("nameAr")} />
+              {errors.nameAr && <p className="text-xs text-destructive">{errors.nameAr.message}</p>}
             </div>
           </div>
 
@@ -117,8 +122,11 @@ export function CompanyFormDialog({
           </div>
 
           <div className="flex flex-col gap-2">
-            <Label htmlFor="industry">Industry</Label>
+            <Label htmlFor="industry">
+              Industry <span className="text-destructive">*</span>
+            </Label>
             <Input id="industry" {...register("industry")} />
+            {errors.industry && <p className="text-xs text-destructive">{errors.industry.message}</p>}
           </div>
 
           <div className="flex flex-col gap-2">

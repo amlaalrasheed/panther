@@ -2,10 +2,10 @@ import { z } from "zod";
 
 export const companySchema = z.object({
   name: z.string().min(1, "Company name is required"),
-  nameAr: z.string().optional().or(z.literal("")),
+  nameAr: z.string().min(1, "Company name (Arabic) is required"),
   type: z.enum(["AGENCY", "DIRECT_COMPANY"]),
   city: z.string().optional().or(z.literal("")),
-  industry: z.string().optional().or(z.literal("")),
+  industry: z.string().min(1, "Industry is required"),
   notes: z.string().optional().or(z.literal("")),
 });
 
@@ -80,6 +80,15 @@ export const feedbackSchema = z.object({
 });
 
 export type FeedbackInput = z.infer<typeof feedbackSchema>;
+
+export const captureSchema = z.object({
+  numberOfCaptures: z.coerce.number().int().min(0).optional(),
+  engagement: z.string().optional().or(z.literal("")),
+  comments: z.string().optional().or(z.literal("")),
+  screenshotUrl: z.string().optional().or(z.literal("")),
+});
+
+export type CaptureInput = z.infer<typeof captureSchema>;
 
 export const commentSchema = z.object({
   body: z.string().min(1),

@@ -10,11 +10,13 @@ import { StatusControl } from "@/components/campaigns/status-control";
 import { AssignControl } from "@/components/campaigns/assign-control";
 import { FinanceForm } from "@/components/campaigns/finance-form";
 import { FeedbackForm } from "@/components/campaigns/feedback-form";
+import { FeedbackDisplay } from "@/components/campaigns/feedback-display";
+import { CaptureDialog } from "@/components/campaigns/capture-dialog";
 import { CommentsSection } from "@/components/campaigns/comments-section";
 import { Timeline } from "@/components/campaigns/timeline";
 import { DeleteCampaignButton } from "@/components/campaigns/delete-campaign-button";
 import { CUSTOMER_TYPE_LABELS, PRIORITY_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
-import { formatCurrency, formatDate } from "@/lib/format";
+import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
 
 export default async function CampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser();
@@ -29,7 +31,8 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
       assignedTo: true,
       createdBy: true,
       finance: true,
-      feedback: true,
+      feedback: { include: { recordedBy: true } },
+      captures: { include: { createdBy: true }, orderBy: { createdAt: "desc" } },
       events: { include: { user: true }, orderBy: { createdAt: "asc" } },
       comments: { include: { user: true }, orderBy: { createdAt: "asc" } },
     },
@@ -61,6 +64,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
           </Link>
         </div>
         <div className="flex gap-2">
+          {user.role === "MARKETING" && isAssignedToMe && <CaptureDialog campaignId={campaign.id} />}
           {(user.role === "ADMIN" || user.role === "FINANCE") && (
             <Button
               variant="outline"
@@ -140,12 +144,45 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             </Card>
           )}
 
-          {user.role === "FINANCE" && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Customer Feedback</CardTitle>
-              </CardHeader>
-              <CardContent>
+          <Card>
+            <CardHeader>
+              <CardTitle>24-Hour Results</CardTitle>
+            </CardHeader>
+            <CardContent className="flex flex-col gap-3">
+              {campaign.captures.length === 0 && (
+                <p className="text-sm text-muted-foreground">No 24-hour results submitted yet.</p>
+              )}
+              {campaign.captures.map((cap) => (
+                <div key={cap.id} className="rounded-lg border p-3 text-sm">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <span className="font-medium">{cap.numberOfCaptures ?? 0} captures</span>
+                    {cap.engagement && <span className="text-muted-foreground">{cap.engagement}</span>}
+                  </div>
+                  {cap.comments && <p className="mt-1 text-muted-foreground">{cap.comments}</p>}
+                  {cap.screenshotUrl && (
+                    <a
+                      href={cap.screenshotUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="mt-1 inline-block text-primary hover:underline"
+                    >
+                      View screenshot
+                    </a>
+                  )}
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {cap.createdBy.name} · {formatDateTime(cap.createdAt)}
+                  </p>
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Feedback</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {user.role === "FINANCE" ? (
                 <FeedbackForm
                   campaignId={campaign.id}
                   defaultValues={
@@ -159,9 +196,11 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
                       : undefined
                   }
                 />
-              </CardContent>
-            </Card>
-          )}
+              ) : (
+                <FeedbackDisplay feedback={campaign.feedback} />
+              )}
+            </CardContent>
+          </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center gap-2">
