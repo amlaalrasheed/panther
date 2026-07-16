@@ -8,6 +8,10 @@ import { STATUS_LABELS, PAYMENT_STATUS_LABELS, CUSTOMER_TYPE_LABELS } from "@/li
 import { formatDate } from "@/lib/format";
 import type { Prisma } from "@/generated/prisma/client";
 
+// Saudi Panther brand green (matches the app's --primary color)
+const BRAND_GREEN = "2B4730";
+const BRAND_GREEN_RGB: [number, number, number] = [0x2b, 0x47, 0x30];
+
 const COLUMNS = [
   "Campaign ID",
   "Company",
@@ -25,7 +29,6 @@ const COLUMNS = [
   "Status",
   "24h Captures",
   "Feedback",
-  "Created Date",
 ];
 
 export async function GET(request: NextRequest) {
@@ -81,13 +84,14 @@ export async function GET(request: NextRequest) {
     STATUS_LABELS[c.status],
     c.captures.reduce((s, cap) => s + (cap.numberOfCaptures ?? 0), 0),
     c.feedback ? `${c.feedback.rating}/5` : "",
-    formatDate(c.createdAt),
   ]);
 
   if (format === "xlsx") {
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet("Campaigns");
-    sheet.addRow(COLUMNS).font = { bold: true };
+    const headerRow = sheet.addRow(COLUMNS);
+    headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
+    headerRow.fill = { type: "pattern", pattern: "solid", fgColor: { argb: `FF${BRAND_GREEN}` } };
     rows.forEach((r) => sheet.addRow(r));
     sheet.columns.forEach((col) => (col.width = 18));
     const buffer = await workbook.xlsx.writeBuffer();
@@ -108,7 +112,7 @@ export async function GET(request: NextRequest) {
     body: rows.map((r) => r.map(String)),
     startY: 20,
     styles: { fontSize: 7 },
-    headStyles: { fillColor: [30, 58, 138] },
+    headStyles: { fillColor: BRAND_GREEN_RGB },
   });
   const buffer = doc.output("arraybuffer");
   return new NextResponse(Buffer.from(buffer), {
