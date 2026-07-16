@@ -101,7 +101,11 @@ export default async function CampaignsPage({
           <form className="mb-4 flex flex-wrap gap-2" action="/campaigns">
             <Input name="q" placeholder="Search campaigns..." defaultValue={q} className="max-w-xs" />
             {showFinance && (
-              <Select name="paid" defaultValue={paid ?? "ALL"}>
+              <Select
+                name="paid"
+                defaultValue={paid ?? "ALL"}
+                items={{ ALL: "All", paid: "Paid", unpaid: "Not Paid" }}
+              >
                 <SelectTrigger className="w-40">
                   <SelectValue placeholder="Payment" />
                 </SelectTrigger>

@@ -103,7 +103,11 @@ export function UserFormDialog({
           </div>
           <div className="flex flex-col gap-2">
             <Label>Role</Label>
-            <Select value={watch("role")} onValueChange={(v) => setValue("role", v as UserInput["role"])}>
+            <Select
+              value={watch("role")}
+              onValueChange={(v) => setValue("role", v as UserInput["role"])}
+              items={ROLE_LABELS}
+            >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

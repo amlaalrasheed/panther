@@ -122,6 +122,7 @@ export function CompanyFormDialog({
             <Select
               value={watch("type")}
               onValueChange={(v) => setValue("type", v as CompanyInput["type"])}
+              items={{ DIRECT_COMPANY: "Direct Company", AGENCY: "Advertising Agency" }}
             >
               <SelectTrigger>
                 <SelectValue />

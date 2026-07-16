@@ -37,8 +37,10 @@ export function AssignControl({
     });
   }
 
+  const items = Object.fromEntries(marketingUsers.map((u) => [u.id, u.name]));
+
   return (
-    <Select value={assignedUserId ?? undefined} onValueChange={onChange} disabled={pending}>
+    <Select value={assignedUserId ?? undefined} onValueChange={onChange} disabled={pending} items={items}>
       <SelectTrigger className="w-full">
         <SelectValue placeholder="Unassigned" />
       </SelectTrigger>

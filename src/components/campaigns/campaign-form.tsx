@@ -134,7 +134,11 @@ export function CampaignForm({
             <Label>
               Contact Person <span className="text-destructive">*</span>
             </Label>
-            <Select value={watch("contactId") || undefined} onValueChange={(v) => setValue("contactId", v ?? "")}>
+            <Select
+              value={watch("contactId") || undefined}
+              onValueChange={(v) => setValue("contactId", v ?? "")}
+              items={Object.fromEntries(filteredContacts.map((c) => [c.id, c.name]))}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Select contact..." />
               </SelectTrigger>
@@ -188,6 +192,7 @@ export function CampaignForm({
             <Select
               value={String(watch("numberOfSnaps"))}
               onValueChange={(v) => setValue("numberOfSnaps", Number(v))}
+              items={Object.fromEntries(SNAP_OPTIONS.map((n) => [String(n), `${n} Snap${n > 1 ? "s" : ""}`]))}
             >
               <SelectTrigger>
                 <SelectValue />
@@ -220,6 +225,7 @@ export function CampaignForm({
             <Select
               value={watch("assignedUserId") || undefined}
               onValueChange={(v) => setValue("assignedUserId", v ?? "")}
+              items={Object.fromEntries(marketingUsers.map((u) => [u.id, u.name]))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Unassigned" />
@@ -241,6 +247,7 @@ export function CampaignForm({
               <Select
                 value={watch("posted") ? "posted" : "not_posted"}
                 onValueChange={(v) => setValue("posted", v === "posted")}
+                items={{ not_posted: "Not Posted", posted: "Posted" }}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -286,6 +293,7 @@ export function CampaignForm({
             <Select
               value={watch("paymentStatus")}
               onValueChange={(v) => setValue("paymentStatus", v as CampaignInput["paymentStatus"])}
+              items={PAYMENT_STATUS_LABELS}
             >
               <SelectTrigger>
                 <SelectValue />

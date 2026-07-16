@@ -67,6 +67,7 @@ export function FeedbackForm({
           <Select
             value={watch("satisfaction")}
             onValueChange={(v) => setValue("satisfaction", v as FeedbackInput["satisfaction"])}
+            items={SATISFACTION_LABELS}
           >
             <SelectTrigger>
               <SelectValue />

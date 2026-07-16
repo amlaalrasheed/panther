@@ -39,7 +39,11 @@ export function ReportExportForm() {
       </div>
       <div className="flex flex-col gap-2">
         <Label>Payment</Label>
-        <Select value={paid} onValueChange={(v) => setPaid(v ?? "ALL")}>
+        <Select
+          value={paid}
+          onValueChange={(v) => setPaid(v ?? "ALL")}
+          items={{ ALL: "All", paid: "Paid", unpaid: "Not Paid" }}
+        >
           <SelectTrigger>
             <SelectValue />
           </SelectTrigger>

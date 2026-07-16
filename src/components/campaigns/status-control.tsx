@@ -65,7 +65,11 @@ export function StatusControl({
       </Badge>
       {options.length > 0 && (
         <div className="flex gap-2">
-          <Select value={next} onValueChange={(v) => setNext(v ?? "")}>
+          <Select
+            value={next}
+            onValueChange={(v) => setNext(v ?? "")}
+            items={Object.fromEntries(options.map((s) => [s, STATUS_LABELS[s]]))}
+          >
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Change status..." />
             </SelectTrigger>
