@@ -91,6 +91,9 @@ model User {
   email        String    @unique
   passwordHash String
   role         Role      @default(MARKETING)
+  // Marketing shift manager — sees the whole team's campaigns, results,
+  // and statistics rather than only their own assigned work.
+  isManager    Boolean   @default(false)
   isActive     Boolean   @default(true)
   avatarUrl    String?
   phone        String?

@@ -28,6 +28,7 @@ export const authConfig = {
         token.id = user.id;
         token.role = user.role;
         token.nameAr = user.nameAr ?? null;
+        token.isManager = user.isManager ?? false;
       }
       // Triggered by the client calling useSession().update(...) after a
       // profile self-edit — the JWT otherwise only gets name/nameAr from
@@ -43,6 +44,7 @@ export const authConfig = {
         session.user.id = token.id as string;
         session.user.role = token.role as "ADMIN" | "FINANCE" | "MARKETING";
         session.user.nameAr = (token.nameAr as string | null) ?? null;
+        session.user.isManager = (token.isManager as boolean | undefined) ?? false;
       }
       return session;
     },

@@ -43,6 +43,7 @@ export default async function AnalyticsPage({
   const user = await requireUser();
   const { period: periodParam } = await searchParams;
   const period: Period = periodParam && periodParam in PERIODS ? (periodParam as Period) : "12m";
+  const isManager = user.role === "MARKETING" && !!user.isManager;
 
   return (
     <div className="flex flex-col gap-6">
@@ -50,8 +51,12 @@ export default async function AnalyticsPage({
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Analytics</h1>
           <p className="text-sm text-muted-foreground">
-            {user.role === "MARKETING" ? "Your performance" : "Business performance"} —{" "}
-            {PERIODS[period].label.toLowerCase()}
+            {user.role !== "MARKETING"
+              ? "Business performance"
+              : isManager
+                ? "Team performance"
+                : "Your performance"}{" "}
+            — {PERIODS[period].label.toLowerCase()}
           </p>
         </div>
         <div className="flex gap-1 rounded-lg border p-1">
@@ -73,7 +78,7 @@ export default async function AnalyticsPage({
       </div>
 
       {user.role === "MARKETING" ? (
-        <MarketingAnalytics userId={user.id} period={period} />
+        <MarketingAnalytics userId={user.id} period={period} isManager={isManager} />
       ) : (
         <AdminFinanceAnalytics period={period} />
       )}
@@ -183,13 +188,28 @@ async function AdminFinanceAnalytics({ period }: { period: Period }) {
   );
 }
 
-async function MarketingAnalytics({ userId, period }: { userId: string; period: Period }) {
+async function MarketingAnalytics({
+  userId,
+  period,
+  isManager,
+}: {
+  userId: string;
+  period: Period;
+  isManager: boolean;
+}) {
   const windowStart = windowStartFor(period);
 
   const [campaignCounts, myCampaigns, allCampaigns, marketingUsers] = await Promise.all([
-    getMonthlyAssignedCampaignCounts(userId, PERIODS[period].chartMonths),
+    isManager
+      ? getMonthlyCampaignCounts(PERIODS[period].chartMonths)
+      : getMonthlyAssignedCampaignCounts(userId, PERIODS[period].chartMonths),
     prisma.campaign.findMany({
-      where: { deletedAt: null, createdAt: { gte: windowStart }, assignedUserId: userId },
+      // Managers see the whole team's campaigns; members see only their own.
+      where: {
+        deletedAt: null,
+        createdAt: { gte: windowStart },
+        ...(isManager ? {} : { assignedUserId: userId }),
+      },
       select: {
         id: true,
         campaignCode: true,
@@ -202,10 +222,15 @@ async function MarketingAnalytics({ userId, period }: { userId: string; period: 
       orderBy: { adDate: "asc" },
     }),
     // Non-financial fields only — used for the team leaderboard, which
-    // Marketing is allowed to see (adv counts / snaps, no money figures).
+    // Marketing is allowed to see (adv counts / snaps / captures, no money).
     prisma.campaign.findMany({
       where: { deletedAt: null, createdAt: { gte: windowStart } },
-      select: { assignedUserId: true, numberOfSnaps: true, posted: true },
+      select: {
+        assignedUserId: true,
+        numberOfSnaps: true,
+        posted: true,
+        captures: { select: { numberOfCaptures: true } },
+      },
     }),
     prisma.user.findMany({
       where: { role: "MARKETING", deletedAt: null },
@@ -235,6 +260,10 @@ async function MarketingAnalytics({ userId, period }: { userId: string; period: 
       name: u.name,
       adv: assigned.length,
       snapsDone: done.reduce((sum, c) => sum + c.numberOfSnaps, 0),
+      captures: assigned.reduce(
+        (sum, c) => sum + c.captures.reduce((s, cap) => s + (cap.numberOfCaptures ?? 0), 0),
+        0
+      ),
     };
   });
 
@@ -245,9 +274,9 @@ async function MarketingAnalytics({ userId, period }: { userId: string; period: 
   return (
     <>
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
-        <MiniStat label="My Adv" value={String(totalAssigned)} />
-        <MiniStat label="Completed" value={String(doneCampaigns.length)} />
-        <MiniStat label="Completion Rate" value={`${completionRate}%`} />
+        <MiniStat label={isManager ? "Team Adv" : "My Adv"} value={String(totalAssigned)} />
+        <MiniStat label="Posted" value={String(doneCampaigns.length)} />
+        <MiniStat label="Posted Rate" value={`${completionRate}%`} />
         <MiniStat label="Snaps Done" value={String(snapsDone)} />
         <MiniStat label="Captures Logged" value={String(totalCaptures)} />
       </div>
@@ -255,7 +284,7 @@ async function MarketingAnalytics({ userId, period }: { userId: string; period: 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>My Campaigns per Month</CardTitle>
+            <CardTitle>{isManager ? "Team" : "My"} Campaigns per Month</CardTitle>
           </CardHeader>
           <CardContent>
             <MonthlyBarChart data={campaignCounts} />
@@ -263,7 +292,7 @@ async function MarketingAnalytics({ userId, period }: { userId: string; period: 
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>My Campaigns by Snap Count</CardTitle>
+            <CardTitle>{isManager ? "Team" : "My"} Campaigns by Snap Count</CardTitle>
           </CardHeader>
           <CardContent>
             <MonthlyBarChart data={snapDistribution} />
@@ -319,8 +348,9 @@ function WorkloadCard({
 function MarketingLeaderboard({
   performance,
 }: {
-  performance: { id: string; name: string; adv: number; snapsDone: number }[];
+  performance: { id: string; name: string; adv: number; snapsDone: number; captures?: number }[];
 }) {
+  const showCaptures = performance.some((m) => m.captures !== undefined);
   return (
     <Card>
       <CardHeader>
@@ -333,6 +363,7 @@ function MarketingLeaderboard({
               <TableHead>Member</TableHead>
               <TableHead className="text-right">Adv</TableHead>
               <TableHead className="text-right">Snaps Done</TableHead>
+              {showCaptures && <TableHead className="text-right">Captures</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -341,11 +372,12 @@ function MarketingLeaderboard({
                 <TableCell className="font-medium">{m.name}</TableCell>
                 <TableCell className="text-right">{m.adv}</TableCell>
                 <TableCell className="text-right">{m.snapsDone}</TableCell>
+                {showCaptures && <TableCell className="text-right">{m.captures ?? 0}</TableCell>}
               </TableRow>
             ))}
             {performance.length === 0 && (
               <TableRow>
-                <TableCell colSpan={3} className="py-8 text-center text-muted-foreground">
+                <TableCell colSpan={showCaptures ? 4 : 3} className="py-8 text-center text-muted-foreground">
                   No marketing team members yet.
                 </TableCell>
               </TableRow>

@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -48,7 +49,14 @@ export function UserFormDialog({
     formState: { errors, isSubmitting },
   } = useForm<UserInput>({
     resolver: zodResolver(userSchema),
-    defaultValues: user ?? { name: "", nameAr: "", email: "", role: "MARKETING", password: "" },
+    defaultValues: user ?? {
+      name: "",
+      nameAr: "",
+      email: "",
+      role: "MARKETING",
+      isManager: false,
+      password: "",
+    },
   });
 
   async function onSubmit(data: UserInput) {
@@ -120,6 +128,18 @@ export function UserFormDialog({
               </SelectContent>
             </Select>
           </div>
+          {watch("role") === "MARKETING" && (
+            <div className="flex items-center gap-3">
+              <Switch
+                checked={watch("isManager") ?? false}
+                onCheckedChange={(v) => setValue("isManager", v)}
+                id="u-isManager"
+              />
+              <Label htmlFor="u-isManager" className="font-normal">
+                Team manager — sees the whole marketing team&apos;s work
+              </Label>
+            </div>
+          )}
           <div className="flex flex-col gap-2">
             <Label htmlFor="u-password">
               {mode === "create" ? "Password" : "New Password (leave blank to keep current)"}

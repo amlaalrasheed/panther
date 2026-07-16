@@ -27,6 +27,7 @@ export async function createUser(input: UserInput) {
       nameAr: data.nameAr || null,
       email: data.email.toLowerCase(),
       role: data.role,
+      isManager: data.role === "MARKETING" ? data.isManager ?? false : false,
       passwordHash,
     },
   });
@@ -57,6 +58,7 @@ export async function updateUser(id: string, input: UserInput) {
       nameAr: data.nameAr || null,
       email: data.email.toLowerCase(),
       role: data.role,
+      isManager: data.role === "MARKETING" ? data.isManager ?? false : false,
       ...(passwordHash ? { passwordHash } : {}),
     },
   });

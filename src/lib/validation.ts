@@ -111,6 +111,7 @@ export const userSchema = z.object({
   nameAr: z.string().optional().or(z.literal("")),
   email: z.string().email("Enter a valid email"),
   role: z.enum(["ADMIN", "FINANCE", "MARKETING"]),
+  isManager: z.boolean().optional(),
   password: z.string().min(8, "Password must be at least 8 characters").optional().or(z.literal("")),
 });
 

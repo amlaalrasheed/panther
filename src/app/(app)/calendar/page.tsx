@@ -37,7 +37,7 @@ export default async function CalendarPage({
     where: {
       deletedAt: null,
       adDate: { gte: gridStart, lte: gridEnd },
-      ...(user.role === "MARKETING" ? { assignedUserId: user.id } : {}),
+      ...(user.role === "MARKETING" && !user.isManager ? { assignedUserId: user.id } : {}),
     },
     select: {
       id: true,

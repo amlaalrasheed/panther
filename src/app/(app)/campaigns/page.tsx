@@ -34,10 +34,13 @@ export default async function CampaignsPage({
   const { q, paid, trusted } = await searchParams;
   const showFinance = canSeeFinance(user.role);
   const showCompany = user.role !== "MARKETING";
+  // A marketing manager oversees the whole team; regular members see only
+  // the campaigns assigned to them.
+  const ownOnly = user.role === "MARKETING" && !user.isManager;
 
   const where: Prisma.CampaignWhereInput = {
     deletedAt: null,
-    ...(user.role === "MARKETING" ? { assignedUserId: user.id } : {}),
+    ...(ownOnly ? { assignedUserId: user.id } : {}),
     ...(trusted === "yes" ? { company: { trustedCustomer: true } } : {}),
     ...(trusted === "no" ? { company: { trustedCustomer: false } } : {}),
     ...(q
@@ -78,7 +81,11 @@ export default async function CampaignsPage({
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Campaigns</h1>
           <p className="text-sm text-muted-foreground">
-            {user.role === "MARKETING" ? "Your assigned advertisement campaigns" : "All advertisement bookings"}
+            {ownOnly
+              ? "Your assigned advertisement campaigns"
+              : user.role === "MARKETING"
+                ? "Your team's advertisement campaigns"
+                : "All advertisement bookings"}
           </p>
         </div>
         {user.role === "FINANCE" && (

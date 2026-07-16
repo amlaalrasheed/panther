@@ -6,11 +6,23 @@ import { CampaignMiniList } from "@/components/dashboard/campaign-mini-list";
 import { prisma } from "@/lib/prisma";
 import { getCommonWidgets } from "@/lib/dashboard-queries";
 
-export async function MarketingDashboard({ userId }: { userId: string }) {
+export async function MarketingDashboard({
+  userId,
+  isManager,
+}: {
+  userId: string;
+  isManager: boolean;
+}) {
   const [widgets, awaitingCaptureNumbers] = await Promise.all([
-    getCommonWidgets("MARKETING", userId),
+    // Managers oversee the whole team, so drop the per-user filter.
+    getCommonWidgets("MARKETING", isManager ? undefined : userId),
     prisma.campaign.findMany({
-      where: { deletedAt: null, assignedUserId: userId, posted: true, captures: { none: {} } },
+      where: {
+        deletedAt: null,
+        posted: true,
+        captures: { none: {} },
+        ...(isManager ? {} : { assignedUserId: userId }),
+      },
       select: {
         id: true,
         campaignTitle: true,
@@ -36,7 +48,7 @@ export async function MarketingDashboard({ userId }: { userId: string }) {
           nativeButton={false}
           render={
             <Link href="/campaigns">
-              My Campaigns
+              {isManager ? "Team Campaigns" : "My Campaigns"}
               <ArrowRight className="size-4" />
             </Link>
           }
@@ -46,10 +58,13 @@ export async function MarketingDashboard({ userId }: { userId: string }) {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Today&apos;s Assigned Campaigns</CardTitle>
+            <CardTitle>{isManager ? "Today's Team Campaigns" : "Today's Assigned Campaigns"}</CardTitle>
           </CardHeader>
           <CardContent>
-            <CampaignMiniList campaigns={widgets.today} emptyText="Nothing assigned to you today." />
+            <CampaignMiniList
+              campaigns={widgets.today}
+              emptyText={isManager ? "Nothing scheduled for the team today." : "Nothing assigned to you today."}
+            />
           </CardContent>
         </Card>
         <Card>

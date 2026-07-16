@@ -62,7 +62,12 @@ export default async function UsersPage() {
                     </TableCell>
                     <TableCell>{u.email}</TableCell>
                     <TableCell>
-                      <Badge variant="secondary">{ROLE_LABELS[u.role]}</Badge>
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <Badge variant="secondary">{ROLE_LABELS[u.role]}</Badge>
+                        {u.isManager && u.role === "MARKETING" && (
+                          <Badge className="border-0 bg-primary/10 text-primary">Manager</Badge>
+                        )}
+                      </div>
                     </TableCell>
                     <TableCell>{formatDate(u.createdAt)}</TableCell>
                     <TableCell>
@@ -77,6 +82,7 @@ export default async function UsersPage() {
                           nameAr: u.nameAr ?? "",
                           email: u.email,
                           role: u.role,
+                          isManager: u.isManager,
                           password: "",
                         }}
                         trigger={

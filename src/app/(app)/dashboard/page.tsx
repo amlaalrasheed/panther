@@ -14,7 +14,9 @@ export default async function DashboardPage() {
       </div>
       {user.role === "ADMIN" && <AdminDashboard />}
       {user.role === "FINANCE" && <FinanceDashboard />}
-      {user.role === "MARKETING" && <MarketingDashboard userId={user.id} />}
+      {user.role === "MARKETING" && (
+        <MarketingDashboard userId={user.id} isManager={!!user.isManager} />
+      )}
     </div>
   );
 }
