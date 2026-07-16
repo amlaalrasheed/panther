@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { Badge } from "@/components/ui/badge";
-import { STATUS_COLORS, STATUS_LABELS } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -9,7 +8,7 @@ type CampaignItem = {
   campaignTitle: string;
   campaignCode: string;
   adDate: Date | null;
-  status: keyof typeof STATUS_LABELS;
+  posted: boolean;
   company: { name: string };
 };
 
@@ -32,8 +31,15 @@ export function CampaignMiniList({ campaigns, emptyText }: { campaigns: Campaign
               {c.company.name} · {formatDate(c.adDate)}
             </p>
           </div>
-          <Badge className={cn("shrink-0 border-0 text-[11px]", STATUS_COLORS[c.status])}>
-            {STATUS_LABELS[c.status]}
+          <Badge
+            className={cn(
+              "shrink-0 border-0 text-[11px]",
+              c.posted
+                ? "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300"
+                : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+            )}
+          >
+            {c.posted ? "Posted" : "Not Posted"}
           </Badge>
         </Link>
       ))}

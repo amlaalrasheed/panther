@@ -16,7 +16,6 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { STATUS_COLORS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 
 export default async function CalendarPage({
@@ -44,7 +43,7 @@ export default async function CalendarPage({
       id: true,
       campaignTitle: true,
       adDate: true,
-      status: true,
+      posted: true,
       company: { select: { name: true } },
     },
     orderBy: { adDate: "asc" },
@@ -116,7 +115,9 @@ export default async function CalendarPage({
                         href={`/campaigns/${c.id}`}
                         className={cn(
                           "truncate rounded px-1.5 py-0.5 text-[10px] font-medium",
-                          STATUS_COLORS[c.status]
+                          c.posted
+                            ? "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300"
+                            : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
                         )}
                         title={`${c.campaignTitle} — ${c.company.name}`}
                       >

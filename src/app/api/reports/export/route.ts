@@ -4,7 +4,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth-helpers";
-import { STATUS_LABELS, PAYMENT_STATUS_LABELS, CUSTOMER_TYPE_LABELS } from "@/lib/constants";
+import { PAYMENT_STATUS_LABELS, CUSTOMER_TYPE_LABELS } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
 import type { Prisma } from "@/generated/prisma/client";
 
@@ -81,7 +81,7 @@ export async function GET(request: NextRequest) {
     Number(c.finance?.remainingBalance ?? 0),
     formatDate(c.finance?.depositDate),
     formatDate(c.adDate),
-    STATUS_LABELS[c.status],
+    c.posted ? "Posted" : "Not Posted",
     c.captures.reduce((s, cap) => s + (cap.numberOfCaptures ?? 0), 0),
     c.feedback ? `${c.feedback.rating}/5` : "",
   ]);

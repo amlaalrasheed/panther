@@ -9,7 +9,7 @@ import { Pencil, Phone, MessageCircle, Mail, Star } from "lucide-react";
 import { CompanyFormDialog } from "@/components/companies/company-form-dialog";
 import { ContactFormDialog } from "@/components/companies/contact-form-dialog";
 import { DeleteCompanyButton } from "@/components/companies/delete-company-button";
-import { CUSTOMER_TYPE_LABELS, STATUS_LABELS, STATUS_COLORS } from "@/lib/constants";
+import { CUSTOMER_TYPE_LABELS } from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -190,10 +190,12 @@ export default async function CompanyDetailPage({ params }: { params: Promise<{ 
                   <span
                     className={cn(
                       "rounded-full px-2 py-0.5 text-xs font-medium",
-                      STATUS_COLORS[c.status]
+                      c.posted
+                        ? "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300"
+                        : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
                     )}
                   >
-                    {STATUS_LABELS[c.status]}
+                    {c.posted ? "Posted" : "Not Posted"}
                   </span>
                 </div>
               </Link>

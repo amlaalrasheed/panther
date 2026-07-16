@@ -17,7 +17,7 @@ import {
   type FeedbackInput,
   type CaptureInput,
 } from "@/lib/validation";
-import { STATUS_ORDER, type CampaignStatus } from "@/lib/constants";
+import { type CampaignStatus } from "@/lib/constants";
 
 export async function createCampaign(input: CampaignInput) {
   const user = await requireRole(["FINANCE"]);
@@ -131,53 +131,38 @@ export async function softDeleteCampaign(id: string) {
   redirect("/campaigns");
 }
 
-const MARKETING_ALLOWED_TRANSITIONS: Record<string, CampaignStatus[]> = {
-  ASSIGNED: ["POSTED"],
-  POSTED: ["WAITING_FOR_RESULTS"],
-  WAITING_FOR_RESULTS: ["COMPLETED"],
-};
-
-export async function changeCampaignStatus(id: string, toStatus: CampaignStatus, note?: string) {
+export async function setCampaignPosted(id: string, posted: boolean) {
   const user = await requireUser();
   const campaign = await prisma.campaign.findUniqueOrThrow({
     where: { id },
     include: { finance: true, company: { select: { trustedCustomer: true } } },
   });
 
-  if (user.role === "MARKETING") {
-    if (campaign.assignedUserId !== user.id) {
-      throw new Error("You can only update campaigns assigned to you.");
-    }
-    const allowed = MARKETING_ALLOWED_TRANSITIONS[campaign.status] ?? [];
-    if (!allowed.includes(toStatus)) {
-      throw new Error("That status change isn't allowed for your role.");
-    }
+  // Marketing can only change campaigns assigned to them.
+  if (user.role === "MARKETING" && campaign.assignedUserId !== user.id) {
+    throw new Error("You can only update campaigns assigned to you.");
   }
 
-  // Trust-based payment gate: untrusted customers can't move past the
-  // payment step until the campaign is marked paid.
-  const targetIndex = STATUS_ORDER.indexOf(toStatus);
-  const paymentGateIndex = STATUS_ORDER.indexOf("PAYMENT_RECEIVED");
-  if (
-    targetIndex >= paymentGateIndex &&
-    !campaign.company.trustedCustomer &&
-    campaign.finance?.paymentStatus !== "PAID"
-  ) {
+  // Trust-based payment gate: an untrusted customer's campaign can't be
+  // marked Posted until its payment is confirmed.
+  if (posted && !campaign.company.trustedCustomer && campaign.finance?.paymentStatus !== "PAID") {
     throw new Error(
-      "This customer is not trusted and payment has not been confirmed. Confirm payment before proceeding."
+      "This customer is not trusted and payment has not been confirmed. Confirm payment before marking as Posted."
     );
   }
 
+  const toStatus: CampaignStatus = posted ? "POSTED" : "SCHEDULED";
   const updated = await prisma.campaign.update({
     where: { id },
     data: {
+      posted,
       status: toStatus,
       events: {
         create: {
           fromStatus: campaign.status,
           toStatus,
           userId: user.id,
-          note: note || null,
+          note: posted ? "Marked as Posted" : "Marked as Not Posted",
         },
       },
     },
@@ -188,8 +173,8 @@ export async function changeCampaignStatus(id: string, toStatus: CampaignStatus,
     action: "STATUS_CHANGE",
     entityType: "Campaign",
     entityId: id,
-    oldValue: { status: campaign.status },
-    newValue: { status: toStatus },
+    oldValue: { posted: campaign.posted },
+    newValue: { posted },
   });
 
   revalidatePath(`/campaigns/${id}`);
@@ -292,25 +277,6 @@ export async function updateCampaignFinance(id: string, input: FinanceUpdateInpu
     },
   });
 
-  // Auto-advance out of the payment-waiting status once fully paid.
-  const campaign = await prisma.campaign.findUniqueOrThrow({ where: { id } });
-  if (data.paymentStatus === "PAID" && campaign.status === "WAITING_FOR_PAYMENT") {
-    await prisma.campaign.update({
-      where: { id },
-      data: {
-        status: "PAYMENT_RECEIVED",
-        events: {
-          create: {
-            fromStatus: "WAITING_FOR_PAYMENT",
-            toStatus: "PAYMENT_RECEIVED",
-            userId: user.id,
-            note: "Payment confirmed",
-          },
-        },
-      },
-    });
-  }
-
   await writeAuditLog({
     userId: user.id,
     action: "UPDATE",
@@ -391,24 +357,6 @@ export async function submitFeedback(campaignId: string, input: FeedbackInput) {
       recordedById: user.id,
     },
   });
-
-  const campaign = await prisma.campaign.findUniqueOrThrow({ where: { id: campaignId } });
-  if (campaign.status === "COMPLETED") {
-    await prisma.campaign.update({
-      where: { id: campaignId },
-      data: {
-        status: "FEEDBACK_RECEIVED",
-        events: {
-          create: {
-            fromStatus: "COMPLETED",
-            toStatus: "FEEDBACK_RECEIVED",
-            userId: user.id,
-            note: "Customer feedback recorded",
-          },
-        },
-      },
-    });
-  }
 
   await writeAuditLog({
     userId: user.id,

@@ -12,45 +12,34 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { changeCampaignStatus } from "@/app/(app)/campaigns/actions";
-import { CAMPAIGN_STATUSES, STATUS_LABELS, STATUS_COLORS, type CampaignStatus } from "@/lib/constants";
+import { setCampaignPosted } from "@/app/(app)/campaigns/actions";
 import { cn } from "@/lib/utils";
 
-const MARKETING_ALLOWED: Record<string, CampaignStatus[]> = {
-  ASSIGNED: ["POSTED"],
-  POSTED: ["WAITING_FOR_RESULTS"],
-  WAITING_FOR_RESULTS: ["COMPLETED"],
-};
+const POSTED_OPTIONS = { not_posted: "Not Posted", posted: "Posted" } as const;
 
 export function StatusControl({
   campaignId,
-  currentStatus,
+  posted,
   role,
   isAssignedToMe,
 }: {
   campaignId: string;
-  currentStatus: CampaignStatus;
+  posted: boolean;
   role: "ADMIN" | "FINANCE" | "MARKETING";
   isAssignedToMe: boolean;
 }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [next, setNext] = useState<string>("");
+  const [next, setNext] = useState<string>(posted ? "posted" : "not_posted");
 
-  const options =
-    role === "MARKETING"
-      ? isAssignedToMe
-        ? MARKETING_ALLOWED[currentStatus] ?? []
-        : []
-      : CAMPAIGN_STATUSES.filter((s) => s !== currentStatus);
+  const canEdit = role === "ADMIN" || role === "FINANCE" || (role === "MARKETING" && isAssignedToMe);
+  const changed = (next === "posted") !== posted;
 
   function submit() {
-    if (!next) return;
     startTransition(async () => {
       try {
-        await changeCampaignStatus(campaignId, next as CampaignStatus);
+        await setCampaignPosted(campaignId, next === "posted");
         toast.success("Status updated");
-        setNext("");
         router.refresh();
       } catch (e) {
         toast.error(e instanceof Error ? e.message : "Could not update status");
@@ -60,28 +49,28 @@ export function StatusControl({
 
   return (
     <div className="flex flex-col gap-3">
-      <Badge className={cn("w-fit border-0 text-sm", STATUS_COLORS[currentStatus])}>
-        {STATUS_LABELS[currentStatus]}
+      <Badge
+        className={cn(
+          "w-fit border-0 text-sm",
+          posted
+            ? "bg-green-100 text-green-800 dark:bg-green-950 dark:text-green-300"
+            : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+        )}
+      >
+        {posted ? "Posted" : "Not Posted"}
       </Badge>
-      {options.length > 0 && (
+      {canEdit && (
         <div className="flex gap-2">
-          <Select
-            value={next}
-            onValueChange={(v) => setNext(v ?? "")}
-            items={Object.fromEntries(options.map((s) => [s, STATUS_LABELS[s]]))}
-          >
+          <Select value={next} onValueChange={(v) => setNext(v ?? next)} items={POSTED_OPTIONS}>
             <SelectTrigger className="w-full">
-              <SelectValue placeholder="Change status..." />
+              <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {options.map((s) => (
-                <SelectItem key={s} value={s}>
-                  {STATUS_LABELS[s]}
-                </SelectItem>
-              ))}
+              <SelectItem value="not_posted">Not Posted</SelectItem>
+              <SelectItem value="posted">Posted</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={submit} disabled={!next || pending} size="sm">
+          <Button onClick={submit} disabled={!changed || pending} size="sm">
             Update
           </Button>
         </div>

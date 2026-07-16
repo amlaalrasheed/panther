@@ -214,7 +214,7 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             <CardContent>
               <StatusControl
                 campaignId={campaign.id}
-                currentStatus={campaign.status}
+                posted={campaign.posted}
                 role={user.role}
                 isAssignedToMe={isAssignedToMe}
               />

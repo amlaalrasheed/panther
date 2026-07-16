@@ -2,14 +2,12 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth-helpers";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { MonthlyBarChart } from "@/components/dashboard/monthly-bar-chart";
 import {
   getMonthlyRevenue,
   getMonthlyCampaignCounts,
   getMonthlyAssignedCampaignCounts,
 } from "@/lib/dashboard-queries";
-import { STATUS_LABELS, STATUS_COLORS } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { subDays, subMonths, startOfMonth } from "date-fns";
@@ -21,8 +19,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-const CLOSED_STATUSES = new Set(["COMPLETED", "FEEDBACK_RECEIVED", "CANCELLED"]);
 
 const PERIODS = {
   "12m": { label: "Last 12 Months", chartMonths: 12 },
@@ -96,7 +92,7 @@ async function AdminFinanceAnalytics({ period }: { period: Period }) {
       select: {
         numberOfSnaps: true,
         assignedUserId: true,
-        status: true,
+        posted: true,
         company: { select: { type: true } },
         finance: { select: { finalAmount: true } },
       },
@@ -125,7 +121,7 @@ async function AdminFinanceAnalytics({ period }: { period: Period }) {
 
   const marketingPerformance = marketingUsers.map((u) => {
     const assigned = campaigns.filter((c) => c.assignedUserId === u.id);
-    const doneCampaigns = assigned.filter((c) => ["COMPLETED", "FEEDBACK_RECEIVED"].includes(c.status));
+    const doneCampaigns = assigned.filter((c) => c.posted);
     const snapsDone = doneCampaigns.reduce((sum, c) => sum + c.numberOfSnaps, 0);
     return {
       id: u.id,
@@ -199,7 +195,7 @@ async function MarketingAnalytics({ userId, period }: { userId: string; period: 
         campaignCode: true,
         campaignTitle: true,
         numberOfSnaps: true,
-        status: true,
+        posted: true,
         adDate: true,
         captures: { select: { numberOfCaptures: true } },
       },
@@ -209,7 +205,7 @@ async function MarketingAnalytics({ userId, period }: { userId: string; period: 
     // Marketing is allowed to see (adv counts / snaps, no money figures).
     prisma.campaign.findMany({
       where: { deletedAt: null, createdAt: { gte: windowStart } },
-      select: { assignedUserId: true, numberOfSnaps: true, status: true },
+      select: { assignedUserId: true, numberOfSnaps: true, posted: true },
     }),
     prisma.user.findMany({
       where: { role: "MARKETING", deletedAt: null },
@@ -218,7 +214,7 @@ async function MarketingAnalytics({ userId, period }: { userId: string; period: 
   ]);
 
   const totalAssigned = myCampaigns.length;
-  const doneCampaigns = myCampaigns.filter((c) => ["COMPLETED", "FEEDBACK_RECEIVED"].includes(c.status));
+  const doneCampaigns = myCampaigns.filter((c) => c.posted);
   const snapsDone = doneCampaigns.reduce((sum, c) => sum + c.numberOfSnaps, 0);
   const completionRate = totalAssigned ? Math.round((doneCampaigns.length / totalAssigned) * 100) : 0;
   const totalCaptures = myCampaigns.reduce(
@@ -233,7 +229,7 @@ async function MarketingAnalytics({ userId, period }: { userId: string; period: 
 
   const marketingPerformance = marketingUsers.map((u) => {
     const assigned = allCampaigns.filter((c) => c.assignedUserId === u.id);
-    const done = assigned.filter((c) => ["COMPLETED", "FEEDBACK_RECEIVED"].includes(c.status));
+    const done = assigned.filter((c) => c.posted);
     return {
       id: u.id,
       name: u.name,
@@ -243,12 +239,8 @@ async function MarketingAnalytics({ userId, period }: { userId: string; period: 
   });
 
   const now = new Date();
-  const upcoming = myCampaigns.filter(
-    (c) => c.adDate && c.adDate >= now && !CLOSED_STATUSES.has(c.status)
-  );
-  const overdue = myCampaigns.filter(
-    (c) => c.adDate && c.adDate < now && !CLOSED_STATUSES.has(c.status)
-  );
+  const upcoming = myCampaigns.filter((c) => c.adDate && c.adDate >= now && !c.posted);
+  const overdue = myCampaigns.filter((c) => c.adDate && c.adDate < now && !c.posted);
 
   return (
     <>
@@ -295,7 +287,7 @@ function WorkloadCard({
   emptyText,
 }: {
   title: string;
-  campaigns: { id: string; campaignCode: string; campaignTitle: string; adDate: Date | null; status: string }[];
+  campaigns: { id: string; campaignCode: string; campaignTitle: string; adDate: Date | null }[];
   emptyText: string;
 }) {
   return (
@@ -317,9 +309,6 @@ function WorkloadCard({
                 {c.campaignCode} · {formatDate(c.adDate)}
               </p>
             </div>
-            <Badge className={cn("border-0 shrink-0", STATUS_COLORS[c.status as keyof typeof STATUS_COLORS])}>
-              {STATUS_LABELS[c.status as keyof typeof STATUS_LABELS]}
-            </Badge>
           </Link>
         ))}
       </CardContent>

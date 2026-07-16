@@ -25,8 +25,6 @@ import { formatCurrency, formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Prisma } from "@/generated/prisma/client";
 
-const POSTED_STATUSES = new Set(["POSTED", "WAITING_FOR_RESULTS", "COMPLETED", "FEEDBACK_RECEIVED"]);
-
 export default async function CampaignsPage({
   searchParams,
 }: {
@@ -65,7 +63,7 @@ export default async function CampaignsPage({
       productName: true,
       numberOfSnaps: true,
       adDate: true,
-      status: true,
+      posted: true,
       company: { select: { name: true } },
       assignedTo: { select: { name: true } },
       finance: { select: { finalAmount: true, paymentStatus: true } },
@@ -138,7 +136,7 @@ export default async function CampaignsPage({
               <TableBody>
                 {campaigns.map((c) => {
                   const isPaid = c.finance?.paymentStatus === "PAID";
-                  const isPosted = POSTED_STATUSES.has(c.status);
+                  const isPosted = c.posted;
                   return (
                     <TableRow key={c.id}>
                       <TableCell>

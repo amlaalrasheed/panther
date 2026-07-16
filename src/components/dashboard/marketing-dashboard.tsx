@@ -10,13 +10,13 @@ export async function MarketingDashboard({ userId }: { userId: string }) {
   const [widgets, awaitingCaptureNumbers] = await Promise.all([
     getCommonWidgets("MARKETING", userId),
     prisma.campaign.findMany({
-      where: { deletedAt: null, assignedUserId: userId, status: "WAITING_FOR_RESULTS" },
+      where: { deletedAt: null, assignedUserId: userId, posted: true, captures: { none: {} } },
       select: {
         id: true,
         campaignTitle: true,
         campaignCode: true,
         adDate: true,
-        status: true,
+        posted: true,
         company: { select: { name: true } },
       },
       orderBy: { adDate: "asc" },
