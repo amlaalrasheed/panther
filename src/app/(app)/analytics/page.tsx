@@ -239,9 +239,7 @@ async function MarketingAnalytics({
   ]);
 
   const totalAssigned = myCampaigns.length;
-  const doneCampaigns = myCampaigns.filter((c) => c.posted);
-  const snapsDone = doneCampaigns.reduce((sum, c) => sum + c.numberOfSnaps, 0);
-  const completionRate = totalAssigned ? Math.round((doneCampaigns.length / totalAssigned) * 100) : 0;
+  const snapsDone = myCampaigns.filter((c) => c.posted).reduce((sum, c) => sum + c.numberOfSnaps, 0);
   const totalCaptures = myCampaigns.reduce(
     (sum, c) => sum + c.captures.reduce((s, cap) => s + (cap.numberOfCaptures ?? 0), 0),
     0
@@ -269,14 +267,11 @@ async function MarketingAnalytics({
 
   const now = new Date();
   const upcoming = myCampaigns.filter((c) => c.adDate && c.adDate >= now && !c.posted);
-  const overdue = myCampaigns.filter((c) => c.adDate && c.adDate < now && !c.posted);
 
   return (
     <>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-5">
+      <div className="grid grid-cols-3 gap-4">
         <MiniStat label={isManager ? "Team Adv" : "My Adv"} value={String(totalAssigned)} />
-        <MiniStat label="Posted" value={String(doneCampaigns.length)} />
-        <MiniStat label="Posted Rate" value={`${completionRate}%`} />
         <MiniStat label="Snaps Done" value={String(snapsDone)} />
         <MiniStat label="Captures Logged" value={String(totalCaptures)} />
       </div>
@@ -300,10 +295,7 @@ async function MarketingAnalytics({
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <WorkloadCard title="Upcoming Ad Dates" campaigns={upcoming} emptyText="Nothing upcoming." />
-        <WorkloadCard title="Overdue" campaigns={overdue} emptyText="Nothing overdue." />
-      </div>
+      <WorkloadCard title="Upcoming Ad Dates" campaigns={upcoming} emptyText="Nothing upcoming." />
 
       <MarketingLeaderboard performance={marketingPerformance} />
     </>
