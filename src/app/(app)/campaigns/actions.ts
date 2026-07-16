@@ -8,6 +8,7 @@ import { writeAuditLog } from "@/lib/audit";
 import { generateCampaignCode } from "@/lib/campaign-code";
 import {
   campaignSchema,
+  campaignCreateSchema,
   financeUpdateSchema,
   feedbackSchema,
   captureSchema,
@@ -20,7 +21,7 @@ import { STATUS_ORDER, type CampaignStatus } from "@/lib/constants";
 
 export async function createCampaign(input: CampaignInput) {
   const user = await requireRole(["FINANCE"]);
-  const data = campaignSchema.parse(input);
+  const data = campaignCreateSchema.parse(input);
   const campaignCode = await generateCampaignCode();
 
   const campaign = await prisma.campaign.create({
@@ -43,17 +44,14 @@ export async function createCampaign(input: CampaignInput) {
       status: "INQUIRY_RECEIVED",
       finance: {
         create: {
-          price: data.price ?? 0,
-          discount: data.discount ?? 0,
-          vat: data.vat ?? 0,
-          finalAmount: (data.price ?? 0) - (data.discount ?? 0) + (data.vat ?? 0),
-          invoiceNumber: data.invoiceNumber || null,
-          paymentMethod: data.paymentMethod || null,
-          paymentStatus: data.paymentStatus ?? "PENDING",
-          expectedDepositDate: data.expectedDepositDate ? new Date(data.expectedDepositDate) : null,
-          amountPaid: data.amountPaid ?? 0,
-          remainingBalance:
-            (data.price ?? 0) - (data.discount ?? 0) + (data.vat ?? 0) - (data.amountPaid ?? 0),
+          price: data.price,
+          discount: data.discount,
+          vat: data.vat,
+          finalAmount: data.price - data.discount + data.vat,
+          paymentStatus: data.paymentStatus,
+          depositDate: new Date(data.depositDate),
+          amountPaid: data.amountPaid,
+          remainingBalance: data.price - data.discount + data.vat - data.amountPaid,
           financialNotes: data.financialNotes || null,
         },
       },

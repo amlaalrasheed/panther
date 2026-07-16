@@ -39,19 +39,30 @@ export const campaignSchema = z.object({
   priority: z.enum(["URGENT", "NORMAL", "SCHEDULED"]),
   assignedUserId: z.string().optional().or(z.literal("")),
 
-  // Financial (Admin / Finance only — enforced server-side)
+  // Financial (Admin / Finance only — enforced server-side).
+  // Optional here since the edit-mode form never renders these fields;
+  // creation requires them via campaignCreateSchema below.
   price: z.coerce.number().min(0).optional(),
   discount: z.coerce.number().min(0).optional(),
   vat: z.coerce.number().min(0).optional(),
-  invoiceNumber: z.string().optional().or(z.literal("")),
-  paymentMethod: z.enum(["BANK_TRANSFER", "CASH", "ONLINE"]).optional().or(z.literal("")),
   paymentStatus: z.enum(["PENDING", "PAID", "PARTIALLY_PAID"]).optional(),
-  expectedDepositDate: z.string().optional().or(z.literal("")),
+  depositDate: z.string().optional().or(z.literal("")),
   amountPaid: z.coerce.number().min(0).optional(),
   financialNotes: z.string().optional().or(z.literal("")),
 });
 
 export type CampaignInput = z.infer<typeof campaignSchema>;
+
+// Stricter variant used only when creating a new booking — the financial
+// fields are required up front instead of being filled in later.
+export const campaignCreateSchema = campaignSchema.extend({
+  price: z.coerce.number().min(0),
+  discount: z.coerce.number().min(0),
+  vat: z.coerce.number().min(0),
+  paymentStatus: z.enum(["PENDING", "PAID", "PARTIALLY_PAID"]),
+  depositDate: z.string().min(1, "Deposit date is required"),
+  amountPaid: z.coerce.number().min(0),
+});
 
 export const financeUpdateSchema = z.object({
   price: z.coerce.number().min(0),

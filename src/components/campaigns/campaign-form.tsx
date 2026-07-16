@@ -20,9 +20,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Combobox } from "@/components/ui/combobox";
-import { campaignSchema, type CampaignInput } from "@/lib/validation";
+import { campaignSchema, campaignCreateSchema, type CampaignInput } from "@/lib/validation";
 import { createCampaign, updateCampaignDetails } from "@/app/(app)/campaigns/actions";
-import { PRIORITY_LABELS, PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
+import { PRIORITY_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
 
 type CompanyOption = { id: string; name: string; nameAr: string | null; type: "AGENCY" | "DIRECT_COMPANY" };
 type ContactOption = { id: string; companyId: string; name: string };
@@ -53,7 +53,7 @@ export function CampaignForm({
     setValue,
     formState: { errors, isSubmitting },
   } = useForm<z.input<typeof campaignSchema>, unknown, CampaignInput>({
-    resolver: zodResolver(campaignSchema),
+    resolver: zodResolver(mode === "create" ? campaignCreateSchema : campaignSchema),
     defaultValues: {
       companyId: "",
       contactId: "",
@@ -71,10 +71,8 @@ export function CampaignForm({
       price: 0,
       discount: 0,
       vat: 0,
-      invoiceNumber: "",
-      paymentMethod: "",
       paymentStatus: "PENDING",
-      expectedDepositDate: "",
+      depositDate: "",
       amountPaid: 0,
       financialNotes: "",
       ...defaultValues,
@@ -260,41 +258,27 @@ export function CampaignForm({
         </CardHeader>
         <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <div className="flex flex-col gap-2">
-            <Label htmlFor="price">Campaign Price (SAR)</Label>
+            <Label htmlFor="price">
+              Campaign Price (SAR) <span className="text-destructive">*</span>
+            </Label>
             <Input id="price" type="number" step="0.01" {...register("price")} />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="discount">Discount (SAR)</Label>
+            <Label htmlFor="discount">
+              Discount (SAR) <span className="text-destructive">*</span>
+            </Label>
             <Input id="discount" type="number" step="0.01" {...register("discount")} />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="vat">VAT (SAR)</Label>
+            <Label htmlFor="vat">
+              VAT (SAR) <span className="text-destructive">*</span>
+            </Label>
             <Input id="vat" type="number" step="0.01" {...register("vat")} />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="invoiceNumber">Invoice Number</Label>
-            <Input id="invoiceNumber" {...register("invoiceNumber")} />
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label>Payment Method</Label>
-            <Select
-              value={watch("paymentMethod") || undefined}
-              onValueChange={(v) => setValue("paymentMethod", v as CampaignInput["paymentMethod"])}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select..." />
-              </SelectTrigger>
-              <SelectContent>
-                {Object.entries(PAYMENT_METHOD_LABELS).map(([value, label]) => (
-                  <SelectItem key={value} value={value}>
-                    {label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex flex-col gap-2">
-            <Label>Payment Status</Label>
+            <Label>
+              Payment Status <span className="text-destructive">*</span>
+            </Label>
             <Select
               value={watch("paymentStatus")}
               onValueChange={(v) => setValue("paymentStatus", v as CampaignInput["paymentStatus"])}
@@ -312,12 +296,17 @@ export function CampaignForm({
             </Select>
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="amountPaid">Amount Paid (SAR)</Label>
+            <Label htmlFor="amountPaid">
+              Amount Paid (SAR) <span className="text-destructive">*</span>
+            </Label>
             <Input id="amountPaid" type="number" step="0.01" {...register("amountPaid")} />
           </div>
           <div className="flex flex-col gap-2">
-            <Label htmlFor="expectedDepositDate">Expected Deposit Date</Label>
-            <Input id="expectedDepositDate" type="date" {...register("expectedDepositDate")} />
+            <Label htmlFor="depositDate">
+              Deposit Date <span className="text-destructive">*</span>
+            </Label>
+            <Input id="depositDate" type="date" {...register("depositDate")} />
+            {errors.depositDate && <p className="text-xs text-destructive">{errors.depositDate.message}</p>}
           </div>
           <div className="flex flex-col gap-2 sm:col-span-3">
             <Label htmlFor="financialNotes">Financial Notes</Label>
