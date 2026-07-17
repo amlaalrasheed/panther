@@ -204,10 +204,45 @@ async function MarketingAnalytics({
 }) {
   const windowStart = windowStartFor(period);
 
+  // Managers get only their team's leaderboard — no personal stats, charts,
+  // or upcoming-campaigns card.
+  if (isManager) {
+    const [teamCampaigns, teamMembers] = await Promise.all([
+      prisma.campaign.findMany({
+        where: { deletedAt: null, createdAt: { gte: windowStart }, assignedUserId: { in: scope } },
+        select: {
+          assignedUserId: true,
+          numberOfSnaps: true,
+          posted: true,
+          captures: { select: { numberOfCaptures: true } },
+        },
+      }),
+      prisma.user.findMany({
+        where: { id: { in: scope }, deletedAt: null },
+        select: { id: true, name: true },
+      }),
+    ]);
+    const marketingPerformance = teamMembers.map((u) => {
+      const assigned = teamCampaigns.filter((c) => c.assignedUserId === u.id);
+      const done = assigned.filter((c) => c.posted);
+      return {
+        id: u.id,
+        name: u.name,
+        adv: assigned.length,
+        snapsDone: done.reduce((sum, c) => sum + c.numberOfSnaps, 0),
+        captures: assigned.reduce(
+          (sum, c) => sum + c.captures.reduce((s, cap) => s + (cap.numberOfCaptures ?? 0), 0),
+          0
+        ),
+      };
+    });
+
+    return <MarketingLeaderboard performance={marketingPerformance} />;
+  }
+
   const [campaignCounts, myCampaigns] = await Promise.all([
     getMonthlyAssignedCampaignCounts(scope, PERIODS[period].chartMonths),
     prisma.campaign.findMany({
-      // Managers see their team's campaigns; members see only their own.
       where: { deletedAt: null, createdAt: { gte: windowStart }, assignedUserId: { in: scope } },
       select: {
         id: true,
@@ -234,53 +269,13 @@ async function MarketingAnalytics({
     value: myCampaigns.filter((c) => c.numberOfSnaps === i + 1).length,
   }));
 
-  // Only a manager gets the per-member leaderboard, scoped to their team.
-  let marketingPerformance: {
-    id: string;
-    name: string;
-    adv: number;
-    snapsDone: number;
-    captures: number;
-  }[] = [];
-  if (isManager) {
-    const [teamCampaigns, teamMembers] = await Promise.all([
-      prisma.campaign.findMany({
-        where: { deletedAt: null, createdAt: { gte: windowStart }, assignedUserId: { in: scope } },
-        select: {
-          assignedUserId: true,
-          numberOfSnaps: true,
-          posted: true,
-          captures: { select: { numberOfCaptures: true } },
-        },
-      }),
-      prisma.user.findMany({
-        where: { id: { in: scope }, deletedAt: null },
-        select: { id: true, name: true },
-      }),
-    ]);
-    marketingPerformance = teamMembers.map((u) => {
-      const assigned = teamCampaigns.filter((c) => c.assignedUserId === u.id);
-      const done = assigned.filter((c) => c.posted);
-      return {
-        id: u.id,
-        name: u.name,
-        adv: assigned.length,
-        snapsDone: done.reduce((sum, c) => sum + c.numberOfSnaps, 0),
-        captures: assigned.reduce(
-          (sum, c) => sum + c.captures.reduce((s, cap) => s + (cap.numberOfCaptures ?? 0), 0),
-          0
-        ),
-      };
-    });
-  }
-
   const now = new Date();
   const upcoming = myCampaigns.filter((c) => c.adDate && c.adDate >= now && !c.posted);
 
   return (
     <>
       <div className="grid grid-cols-3 gap-4">
-        <MiniStat label={isManager ? "Team Adv" : "My Adv"} value={String(totalAssigned)} />
+        <MiniStat label="My Adv" value={String(totalAssigned)} />
         <MiniStat label="Snaps Done" value={String(snapsDone)} />
         <MiniStat label="Captures Logged" value={String(totalCaptures)} />
       </div>
@@ -288,7 +283,7 @@ async function MarketingAnalytics({
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>{isManager ? "Team" : "My"} Campaigns per Month</CardTitle>
+            <CardTitle>My Campaigns per Month</CardTitle>
           </CardHeader>
           <CardContent>
             <MonthlyBarChart data={campaignCounts} />
@@ -296,7 +291,7 @@ async function MarketingAnalytics({
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>{isManager ? "Team" : "My"} Campaigns by Snap Count</CardTitle>
+            <CardTitle>My Campaigns by Snap Count</CardTitle>
           </CardHeader>
           <CardContent>
             <MonthlyBarChart data={snapDistribution} />
@@ -305,8 +300,6 @@ async function MarketingAnalytics({
       </div>
 
       <WorkloadCard title="Upcoming Ad Dates" campaigns={upcoming} emptyText="Nothing upcoming." />
-
-      {isManager && <MarketingLeaderboard performance={marketingPerformance} />}
     </>
   );
 }
