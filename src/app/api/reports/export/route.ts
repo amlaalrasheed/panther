@@ -4,7 +4,7 @@ import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { prisma } from "@/lib/prisma";
 import { requireRole } from "@/lib/auth-helpers";
-import { PAYMENT_STATUS_LABELS, CUSTOMER_TYPE_LABELS } from "@/lib/constants";
+import { PAYMENT_STATUS_LABELS, CUSTOMER_TYPE_LABELS, PLATFORM_LABELS } from "@/lib/constants";
 import { formatDate } from "@/lib/format";
 import type { Prisma } from "@/generated/prisma/client";
 
@@ -19,6 +19,7 @@ const COLUMNS = [
   "Contact",
   "Campaign",
   "Product",
+  "Platform",
   "Snaps",
   "Marketing Member",
   "Price",
@@ -74,7 +75,8 @@ export async function GET(request: NextRequest) {
     c.contact?.name ?? "",
     c.campaignTitle,
     c.productName,
-    c.numberOfSnaps,
+    PLATFORM_LABELS[c.platform],
+    c.platform === "SNAPCHAT" ? c.numberOfSnaps : "—",
     c.assignedTo?.name ?? "",
     Number(c.finance?.finalAmount ?? 0),
     c.finance ? PAYMENT_STATUS_LABELS[c.finance.paymentStatus] : "",

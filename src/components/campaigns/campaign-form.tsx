@@ -22,7 +22,7 @@ import {
 import { Combobox } from "@/components/ui/combobox";
 import { campaignSchema, campaignCreateSchema, type CampaignInput } from "@/lib/validation";
 import { createCampaign, updateCampaignDetails } from "@/app/(app)/campaigns/actions";
-import { PAYMENT_STATUS_LABELS } from "@/lib/constants";
+import { PAYMENT_STATUS_LABELS, PLATFORM_LABELS } from "@/lib/constants";
 
 type CompanyOption = { id: string; name: string; nameAr: string | null; type: "AGENCY" | "DIRECT_COMPANY" };
 type ContactOption = { id: string; companyId: string; name: string };
@@ -61,6 +61,7 @@ export function CampaignForm({
       campaignTitle: "",
       campaignTitleAr: "",
       description: "",
+      platform: "SNAPCHAT",
       numberOfSnaps: 1,
       packageName: "",
       adDate: "",
@@ -183,24 +184,47 @@ export function CampaignForm({
             <Textarea id="description" rows={2} {...register("description")} />
           </div>
           <div className="flex flex-col gap-2">
-            <Label>Number of Snaps</Label>
+            <Label>
+              Platform <span className="text-destructive">*</span>
+            </Label>
             <Select
-              value={String(watch("numberOfSnaps"))}
-              onValueChange={(v) => setValue("numberOfSnaps", Number(v))}
-              items={Object.fromEntries(SNAP_OPTIONS.map((n) => [String(n), `${n} Snap${n > 1 ? "s" : ""}`]))}
+              value={watch("platform")}
+              onValueChange={(v) => setValue("platform", v as CampaignInput["platform"])}
+              items={PLATFORM_LABELS}
             >
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {SNAP_OPTIONS.map((n) => (
-                  <SelectItem key={n} value={String(n)}>
-                    {n} Snap{n > 1 ? "s" : ""}
+                {Object.entries(PLATFORM_LABELS).map(([value, label]) => (
+                  <SelectItem key={value} value={value}>
+                    {label}
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
           </div>
+          {watch("platform") === "SNAPCHAT" && (
+            <div className="flex flex-col gap-2">
+              <Label>Number of Snaps</Label>
+              <Select
+                value={String(watch("numberOfSnaps"))}
+                onValueChange={(v) => setValue("numberOfSnaps", Number(v))}
+                items={Object.fromEntries(SNAP_OPTIONS.map((n) => [String(n), `${n} Snap${n > 1 ? "s" : ""}`]))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {SNAP_OPTIONS.map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n} Snap{n > 1 ? "s" : ""}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
           <div className="flex flex-col gap-2">
             <Label htmlFor="adDate">
               Advertisement Date <span className="text-destructive">*</span>

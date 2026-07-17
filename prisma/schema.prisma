@@ -31,6 +31,12 @@ enum Priority {
   SCHEDULED
 }
 
+enum Platform {
+  TWITTER
+  TIKTOK
+  SNAPCHAT
+}
+
 enum CampaignStatus {
   INQUIRY_RECEIVED
   WAITING_FOR_PAYMENT
@@ -184,6 +190,8 @@ model Campaign {
   description      String?
   brief            String?
 
+  // Advertising platform. numberOfSnaps only applies when platform is SNAPCHAT.
+  platform       Platform @default(SNAPCHAT)
   numberOfSnaps  Int      @default(1)
   packageName    String?
 

@@ -15,7 +15,7 @@ import { CaptureDialog } from "@/components/campaigns/capture-dialog";
 import { CommentsSection } from "@/components/campaigns/comments-section";
 import { Timeline } from "@/components/campaigns/timeline";
 import { DeleteCampaignButton } from "@/components/campaigns/delete-campaign-button";
-import { CUSTOMER_TYPE_LABELS, PAYMENT_STATUS_LABELS } from "@/lib/constants";
+import { CUSTOMER_TYPE_LABELS, PAYMENT_STATUS_LABELS, PLATFORM_LABELS } from "@/lib/constants";
 import { formatCurrency, formatDate, formatDateTime } from "@/lib/format";
 
 export default async function CampaignDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -89,7 +89,10 @@ export default async function CampaignDetailPage({ params }: { params: Promise<{
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-4 text-sm sm:grid-cols-3">
               <Field label="Product" value={campaign.productName} />
-              <Field label="Snaps" value={String(campaign.numberOfSnaps)} />
+              <Field label="Platform" value={PLATFORM_LABELS[campaign.platform]} />
+              {campaign.platform === "SNAPCHAT" && (
+                <Field label="Snaps" value={String(campaign.numberOfSnaps)} />
+              )}
               <Field label="Ad Date" value={formatDate(campaign.adDate)} />
               <Field label="Posting Time" value={campaign.postingTime ?? "—"} />
               <Field label="Posting Status" value={campaign.posted ? "Posted" : "Not Posted"} />

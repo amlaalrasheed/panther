@@ -54,6 +54,12 @@ export const PRIORITY_LABELS: Record<string, string> = {
   SCHEDULED: "Scheduled",
 };
 
+export const PLATFORM_LABELS: Record<string, string> = {
+  TWITTER: "Twitter",
+  TIKTOK: "TikTok",
+  SNAPCHAT: "Snapchat",
+};
+
 export const PAYMENT_STATUS_LABELS: Record<string, string> = {
   PENDING: "Pending",
   PAID: "Paid",

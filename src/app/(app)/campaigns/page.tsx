@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/table";
 import { Plus } from "lucide-react";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { PLATFORM_LABELS } from "@/lib/constants";
 import { cn } from "@/lib/utils";
 import type { Prisma } from "@/generated/prisma/client";
 
@@ -66,6 +67,7 @@ export default async function CampaignsPage({
       campaignTitle: true,
       campaignCode: true,
       productName: true,
+      platform: true,
       numberOfSnaps: true,
       adDate: true,
       posted: true,
@@ -134,6 +136,7 @@ export default async function CampaignsPage({
                 <TableRow>
                   <TableHead>Campaign</TableHead>
                   {showCompany && <TableHead>Company</TableHead>}
+                  <TableHead>Platform</TableHead>
                   <TableHead>Snaps</TableHead>
                   <TableHead>Scheduled</TableHead>
                   <TableHead>Assigned</TableHead>
@@ -157,7 +160,8 @@ export default async function CampaignsPage({
                         </div>
                       </TableCell>
                       {showCompany && <TableCell>{c.company.name}</TableCell>}
-                      <TableCell>{c.numberOfSnaps}</TableCell>
+                      <TableCell>{PLATFORM_LABELS[c.platform]}</TableCell>
+                      <TableCell>{c.platform === "SNAPCHAT" ? c.numberOfSnaps : "—"}</TableCell>
                       <TableCell>{formatDate(c.adDate)}</TableCell>
                       <TableCell>{c.assignedTo?.name ?? "—"}</TableCell>
                       {showFinance && (
@@ -197,7 +201,7 @@ export default async function CampaignsPage({
                 {campaigns.length === 0 && (
                   <TableRow>
                     <TableCell
-                      colSpan={5 + (showCompany ? 1 : 0) + (showFinance ? 2 : 0)}
+                      colSpan={6 + (showCompany ? 1 : 0) + (showFinance ? 2 : 0)}
                       className="py-10 text-center text-muted-foreground"
                     >
                       No campaigns found.

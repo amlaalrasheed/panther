@@ -47,6 +47,7 @@ export default async function EditCampaignPage({ params }: { params: Promise<{ i
             campaignTitle: campaign.campaignTitle,
             campaignTitleAr: campaign.campaignTitleAr ?? "",
             description: campaign.description ?? "",
+            platform: campaign.platform,
             numberOfSnaps: campaign.numberOfSnaps,
             packageName: campaign.packageName ?? "",
             adDate: campaign.adDate ? campaign.adDate.toISOString().slice(0, 10) : "",

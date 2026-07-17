@@ -31,6 +31,7 @@ export const campaignSchema = z.object({
   campaignTitle: z.string().min(1, "Campaign title is required"),
   campaignTitleAr: z.string().optional().or(z.literal("")),
   description: z.string().optional().or(z.literal("")),
+  platform: z.enum(["TWITTER", "TIKTOK", "SNAPCHAT"]),
   numberOfSnaps: z.coerce.number().int().min(1).max(7),
   packageName: z.string().optional().or(z.literal("")),
   adDate: z.string().min(1, "Advertisement date is required"),
