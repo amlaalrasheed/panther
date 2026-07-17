@@ -20,7 +20,7 @@ export async function AdminDashboard() {
     getMonthlyCampaignCounts(),
     getTopCustomers("DIRECT_COMPANY"),
     getTopCustomers("AGENCY"),
-    getCommonWidgets("ADMIN"),
+    getCommonWidgets(),
   ]);
 
   return (

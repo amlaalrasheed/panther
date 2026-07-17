@@ -32,10 +32,12 @@ import { ROLE_LABELS, ALLOWED_EMAIL_DOMAIN } from "@/lib/constants";
 export function UserFormDialog({
   mode,
   user,
+  managers = [],
   trigger,
 }: {
   mode: "create" | "edit";
   user?: UserInput & { id: string };
+  managers?: { id: string; name: string }[];
   trigger?: React.ReactElement;
 }) {
   const router = useRouter();
@@ -55,6 +57,7 @@ export function UserFormDialog({
       email: "",
       role: "MARKETING",
       isManager: false,
+      managerId: "",
       password: "",
     },
   });
@@ -136,8 +139,30 @@ export function UserFormDialog({
                 id="u-isManager"
               />
               <Label htmlFor="u-isManager" className="font-normal">
-                Team manager — sees the whole marketing team&apos;s work
+                Team manager — sees their team&apos;s work
               </Label>
+            </div>
+          )}
+          {watch("role") === "MARKETING" && !watch("isManager") && managers.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <Label>Reports to (team manager)</Label>
+              <Select
+                value={watch("managerId") || "none"}
+                onValueChange={(v) => setValue("managerId", v === "none" ? "" : (v ?? ""))}
+                items={{ none: "— No team —", ...Object.fromEntries(managers.map((m) => [m.id, m.name])) }}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="none">— No team —</SelectItem>
+                  {managers.map((m) => (
+                    <SelectItem key={m.id} value={m.id}>
+                      {m.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
           <div className="flex flex-col gap-2">

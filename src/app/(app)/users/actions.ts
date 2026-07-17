@@ -28,6 +28,9 @@ export async function createUser(input: UserInput) {
       email: data.email.toLowerCase(),
       role: data.role,
       isManager: data.role === "MARKETING" ? data.isManager ?? false : false,
+      // Only a non-manager marketing member reports to a manager.
+      managerId:
+        data.role === "MARKETING" && !data.isManager && data.managerId ? data.managerId : null,
       passwordHash,
     },
   });
@@ -59,6 +62,9 @@ export async function updateUser(id: string, input: UserInput) {
       email: data.email.toLowerCase(),
       role: data.role,
       isManager: data.role === "MARKETING" ? data.isManager ?? false : false,
+      // Only a non-manager marketing member reports to a manager.
+      managerId:
+        data.role === "MARKETING" && !data.isManager && data.managerId ? data.managerId : null,
       ...(passwordHash ? { passwordHash } : {}),
     },
   });

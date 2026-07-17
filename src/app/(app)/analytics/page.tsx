@@ -7,6 +7,7 @@ import {
   getMonthlyRevenue,
   getMonthlyCampaignCounts,
   getMonthlyAssignedCampaignCounts,
+  getMarketingScope,
 } from "@/lib/dashboard-queries";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -78,7 +79,11 @@ export default async function AnalyticsPage({
       </div>
 
       {user.role === "MARKETING" ? (
-        <MarketingAnalytics userId={user.id} period={period} isManager={isManager} />
+        <MarketingAnalytics
+          scope={(await getMarketingScope(user)) ?? [user.id]}
+          period={period}
+          isManager={isManager}
+        />
       ) : (
         <AdminFinanceAnalytics period={period} />
       )}
@@ -189,27 +194,21 @@ async function AdminFinanceAnalytics({ period }: { period: Period }) {
 }
 
 async function MarketingAnalytics({
-  userId,
+  scope,
   period,
   isManager,
 }: {
-  userId: string;
+  scope: string[];
   period: Period;
   isManager: boolean;
 }) {
   const windowStart = windowStartFor(period);
 
-  const [campaignCounts, myCampaigns, allCampaigns, marketingUsers] = await Promise.all([
-    isManager
-      ? getMonthlyCampaignCounts(PERIODS[period].chartMonths)
-      : getMonthlyAssignedCampaignCounts(userId, PERIODS[period].chartMonths),
+  const [campaignCounts, myCampaigns] = await Promise.all([
+    getMonthlyAssignedCampaignCounts(scope, PERIODS[period].chartMonths),
     prisma.campaign.findMany({
-      // Managers see the whole team's campaigns; members see only their own.
-      where: {
-        deletedAt: null,
-        createdAt: { gte: windowStart },
-        ...(isManager ? {} : { assignedUserId: userId }),
-      },
+      // Managers see their team's campaigns; members see only their own.
+      where: { deletedAt: null, createdAt: { gte: windowStart }, assignedUserId: { in: scope } },
       select: {
         id: true,
         campaignCode: true,
@@ -220,21 +219,6 @@ async function MarketingAnalytics({
         captures: { select: { numberOfCaptures: true } },
       },
       orderBy: { adDate: "asc" },
-    }),
-    // Non-financial fields only — used for the team leaderboard, which
-    // Marketing is allowed to see (adv counts / snaps / captures, no money).
-    prisma.campaign.findMany({
-      where: { deletedAt: null, createdAt: { gte: windowStart } },
-      select: {
-        assignedUserId: true,
-        numberOfSnaps: true,
-        posted: true,
-        captures: { select: { numberOfCaptures: true } },
-      },
-    }),
-    prisma.user.findMany({
-      where: { role: "MARKETING", deletedAt: null },
-      select: { id: true, name: true },
     }),
   ]);
 
@@ -250,20 +234,45 @@ async function MarketingAnalytics({
     value: myCampaigns.filter((c) => c.numberOfSnaps === i + 1).length,
   }));
 
-  const marketingPerformance = marketingUsers.map((u) => {
-    const assigned = allCampaigns.filter((c) => c.assignedUserId === u.id);
-    const done = assigned.filter((c) => c.posted);
-    return {
-      id: u.id,
-      name: u.name,
-      adv: assigned.length,
-      snapsDone: done.reduce((sum, c) => sum + c.numberOfSnaps, 0),
-      captures: assigned.reduce(
-        (sum, c) => sum + c.captures.reduce((s, cap) => s + (cap.numberOfCaptures ?? 0), 0),
-        0
-      ),
-    };
-  });
+  // Only a manager gets the per-member leaderboard, scoped to their team.
+  let marketingPerformance: {
+    id: string;
+    name: string;
+    adv: number;
+    snapsDone: number;
+    captures: number;
+  }[] = [];
+  if (isManager) {
+    const [teamCampaigns, teamMembers] = await Promise.all([
+      prisma.campaign.findMany({
+        where: { deletedAt: null, createdAt: { gte: windowStart }, assignedUserId: { in: scope } },
+        select: {
+          assignedUserId: true,
+          numberOfSnaps: true,
+          posted: true,
+          captures: { select: { numberOfCaptures: true } },
+        },
+      }),
+      prisma.user.findMany({
+        where: { id: { in: scope }, deletedAt: null },
+        select: { id: true, name: true },
+      }),
+    ]);
+    marketingPerformance = teamMembers.map((u) => {
+      const assigned = teamCampaigns.filter((c) => c.assignedUserId === u.id);
+      const done = assigned.filter((c) => c.posted);
+      return {
+        id: u.id,
+        name: u.name,
+        adv: assigned.length,
+        snapsDone: done.reduce((sum, c) => sum + c.numberOfSnaps, 0),
+        captures: assigned.reduce(
+          (sum, c) => sum + c.captures.reduce((s, cap) => s + (cap.numberOfCaptures ?? 0), 0),
+          0
+        ),
+      };
+    });
+  }
 
   const now = new Date();
   const upcoming = myCampaigns.filter((c) => c.adDate && c.adDate >= now && !c.posted);
@@ -297,7 +306,7 @@ async function MarketingAnalytics({
 
       <WorkloadCard title="Upcoming Ad Dates" campaigns={upcoming} emptyText="Nothing upcoming." />
 
-      <MarketingLeaderboard performance={marketingPerformance} />
+      {isManager && <MarketingLeaderboard performance={marketingPerformance} />}
     </>
   );
 }

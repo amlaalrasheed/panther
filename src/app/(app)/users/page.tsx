@@ -25,6 +25,11 @@ export default async function UsersPage() {
     orderBy: { createdAt: "asc" },
   });
 
+  const managers = users
+    .filter((u) => u.role === "MARKETING" && u.isManager)
+    .map((u) => ({ id: u.id, name: u.name }));
+  const managerName = new Map(managers.map((m) => [m.id, m.name]));
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -32,7 +37,7 @@ export default async function UsersPage() {
           <h1 className="text-2xl font-semibold tracking-tight">Users</h1>
           <p className="text-sm text-muted-foreground">Manage employee accounts and permissions</p>
         </div>
-        <UserFormDialog mode="create" />
+        <UserFormDialog mode="create" managers={managers} />
       </div>
 
       <Card>
@@ -67,6 +72,11 @@ export default async function UsersPage() {
                         {u.isManager && u.role === "MARKETING" && (
                           <Badge className="border-0 bg-primary/10 text-primary">Manager</Badge>
                         )}
+                        {u.role === "MARKETING" && !u.isManager && u.managerId && (
+                          <span className="text-xs text-muted-foreground">
+                            → {managerName.get(u.managerId) ?? "team"}
+                          </span>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>{formatDate(u.createdAt)}</TableCell>
@@ -76,6 +86,7 @@ export default async function UsersPage() {
                     <TableCell>
                       <UserFormDialog
                         mode="edit"
+                        managers={managers.filter((m) => m.id !== u.id)}
                         user={{
                           id: u.id,
                           name: u.name,
@@ -83,6 +94,7 @@ export default async function UsersPage() {
                           email: u.email,
                           role: u.role,
                           isManager: u.isManager,
+                          managerId: u.managerId ?? "",
                           password: "",
                         }}
                         trigger={

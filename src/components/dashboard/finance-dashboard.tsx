@@ -18,7 +18,7 @@ export async function FinanceDashboard() {
     prisma.campaign.count({
       where: { deletedAt: null, createdAt: { gte: new Date(new Date().setHours(0, 0, 0, 0)) } },
     }),
-    getCommonWidgets("FINANCE"),
+    getCommonWidgets(),
     prisma.feedback.findMany({
       include: { campaign: { include: { company: true } } },
       orderBy: { createdAt: "desc" },

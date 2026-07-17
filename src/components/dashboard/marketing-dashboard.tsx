@@ -7,21 +7,21 @@ import { prisma } from "@/lib/prisma";
 import { getCommonWidgets } from "@/lib/dashboard-queries";
 
 export async function MarketingDashboard({
-  userId,
+  scope,
   isManager,
 }: {
-  userId: string;
+  scope: string[];
   isManager: boolean;
 }) {
   const [widgets, awaitingCaptureNumbers] = await Promise.all([
-    // Managers oversee the whole team, so drop the per-user filter.
-    getCommonWidgets("MARKETING", isManager ? undefined : userId),
+    // Managers see their whole team; members see only their own campaigns.
+    getCommonWidgets(scope),
     prisma.campaign.findMany({
       where: {
         deletedAt: null,
         posted: true,
         captures: { none: {} },
-        ...(isManager ? {} : { assignedUserId: userId }),
+        assignedUserId: { in: scope },
       },
       select: {
         id: true,

@@ -12,6 +12,7 @@ import {
   subMonths,
 } from "date-fns";
 import { requireUser } from "@/lib/auth-helpers";
+import { getMarketingScope } from "@/lib/dashboard-queries";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ export default async function CalendarPage({
   searchParams: Promise<{ month?: string }>;
 }) {
   const user = await requireUser();
+  const scope = await getMarketingScope(user);
   const { month } = await searchParams;
   const anchor = month ? new Date(`${month}-01T00:00:00`) : new Date();
 
@@ -37,7 +39,7 @@ export default async function CalendarPage({
     where: {
       deletedAt: null,
       adDate: { gte: gridStart, lte: gridEnd },
-      ...(user.role === "MARKETING" && !user.isManager ? { assignedUserId: user.id } : {}),
+      ...(scope ? { assignedUserId: { in: scope } } : {}),
     },
     select: {
       id: true,

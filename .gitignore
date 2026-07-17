@@ -44,3 +44,6 @@ next-env.d.ts
 
 # Claude Code local machine settings (permissions etc) — not project config
 .claude/settings.local.json
+
+# Local employee roster script (contains temp password / PII — do not commit)
+prisma/seed-employees.ts
